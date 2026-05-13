@@ -1,0 +1,53 @@
+###############################################################################
+# Aura Health - Kustomize Base
+###############################################################################
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aura-health
+
+commonLabels:
+  app.kubernetes.io/part-of: aura-health
+  app.kubernetes.io/managed-by: kustomize
+
+resources:
+  # Namespace
+  - namespace.yaml
+
+  # Configuration
+  - configmap.yaml
+  - secrets.yaml
+
+  # Backend API
+  - backend-deployment.yaml
+  - backend-service.yaml
+
+  # Web Frontend
+  - web-deployment.yaml
+  - web-service.yaml
+
+  # ML Service
+  - ml-deployment.yaml
+  - ml-service.yaml
+
+  # Data Stores
+  - postgres-statefulset.yaml
+  - redis-deployment.yaml
+  - kafka-statefulset.yaml
+
+  # Networking
+  - ingress.yaml
+
+  # Autoscaling
+  - hpa.yaml
+
+images:
+  - name: aura-health/backend
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/backend
+    newTag: latest
+  - name: aura-health/web
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/web
+    newTag: latest
+  - name: aura-health/ml-service
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/ml-service
+    newTag: latest

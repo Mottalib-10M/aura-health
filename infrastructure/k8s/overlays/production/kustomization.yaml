@@ -1,0 +1,267 @@
+###############################################################################
+# Aura Health - Production Overlay
+# Full replicas, production-grade resources, strict security
+###############################################################################
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aura-health-production
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+
+commonAnnotations:
+  app.kubernetes.io/version: "1.0.0"
+
+resources:
+  - ../../base
+
+patches:
+  # Create production namespace
+  - target:
+      kind: Namespace
+      name: aura-health
+    patch: |
+      - op: replace
+        path: /metadata/name
+        value: aura-health-production
+      - op: add
+        path: /metadata/labels/pod-security.kubernetes.io~1enforce
+        value: restricted
+      - op: add
+        path: /metadata/labels/pod-security.kubernetes.io~1audit
+        value: restricted
+      - op: add
+        path: /metadata/labels/pod-security.kubernetes.io~1warn
+        value: restricted
+
+  # Backend: 5 replicas with production resources
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 5
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 512Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 1Gi
+      - op: replace
+        path: /spec/strategy/rollingUpdate/maxSurge
+        value: 1
+      - op: replace
+        path: /spec/strategy/rollingUpdate/maxUnavailable
+        value: 0
+
+  # Web: 5 replicas
+  - target:
+      kind: Deployment
+      name: web
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 5
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 200m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 256Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 512Mi
+
+  # ML Service: 3 replicas with GPU
+  - target:
+      kind: Deployment
+      name: ml-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 2Gi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "4"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 4Gi
+
+  # Redis: 3 replicas
+  - target:
+      kind: Deployment
+      name: redis
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 250m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 512Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 1Gi
+
+  # Kafka: 3 brokers
+  - target:
+      kind: StatefulSet
+      name: kafka
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 2Gi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "4"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 8Gi
+
+  # PostgreSQL: production resources
+  - target:
+      kind: StatefulSet
+      name: postgres
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 2Gi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "4"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 8Gi
+
+  # HPA Backend: production scaling
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: backend-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 5
+      - op: replace
+        path: /spec/maxReplicas
+        value: 20
+
+  # HPA ML Service: production scaling
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: ml-service-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 10
+
+  # HPA Web: production scaling
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: web-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 5
+      - op: replace
+        path: /spec/maxReplicas
+        value: 15
+
+  # Ingress: production hostnames
+  - target:
+      kind: Ingress
+      name: aura-ingress
+    patch: |
+      - op: replace
+        path: /spec/rules/0/host
+        value: api.aurahealth.app
+      - op: replace
+        path: /spec/rules/1/host
+        value: app.aurahealth.app
+      - op: replace
+        path: /spec/rules/2/host
+        value: ml.aurahealth.app
+      - op: replace
+        path: /spec/tls/0/hosts
+        value:
+          - api.aurahealth.app
+          - app.aurahealth.app
+          - ml.aurahealth.app
+      - op: replace
+        path: /spec/tls/0/secretName
+        value: aura-production-tls-cert
+
+# ConfigMap overrides for production
+configMapGenerator:
+  - name: aura-config
+    behavior: merge
+    literals:
+      - NODE_ENV=production
+      - LOG_LEVEL=warn
+      - LOG_FORMAT=json
+      - GRAPHQL_PLAYGROUND=false
+      - GRAPHQL_INTROSPECTION=false
+      - API_URL=https://api.aurahealth.app
+      - APP_URL=https://app.aurahealth.app
+      - CORS_ORIGINS=https://app.aurahealth.app
+      - RATE_LIMIT_MAX=100
+      - DATABASE_POOL_MIN=10
+      - DATABASE_POOL_MAX=50
+      - DATABASE_SSL=true
+
+# Production secrets - managed externally via External Secrets Operator
+# Reference: infrastructure/terraform/modules/secrets-manager/
+secretGenerator:
+  - name: aura-secrets
+    behavior: merge
+    options:
+      disableNameSuffixHash: true
+    literals:
+      - PLACEHOLDER=managed-by-external-secrets-operator
+
+images:
+  - name: aura-health/backend
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/backend
+    # Tag is set dynamically during deployment via CI/CD
+    newTag: latest
+  - name: aura-health/web
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/web
+    newTag: latest
+  - name: aura-health/ml-service
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/ml-service
+    newTag: latest

@@ -1,0 +1,138 @@
+###############################################################################
+# Aura Health - Backend API Deployment
+###############################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: aura-health
+spec:
+  replicas: 5
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backend
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: aura-health
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "4000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: backend-sa
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - backend
+                topologyKey: kubernetes.io/hostname
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - backend
+                topologyKey: topology.kubernetes.io/zone
+      containers:
+        - name: backend
+          image: aura-health/backend:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 4000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: aura-config
+            - secretRef:
+                name: aura-secrets
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "4000"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 12
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
+      imagePullSecrets:
+        - name: ecr-registry-secret
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: aura-health
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::role/aura-backend-role

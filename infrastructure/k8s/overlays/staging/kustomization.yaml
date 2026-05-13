@@ -1,0 +1,186 @@
+###############################################################################
+# Aura Health - Staging Overlay
+# Moderate replicas and resources for staging/QA environment
+###############################################################################
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aura-health-staging
+
+namePrefix: staging-
+
+commonLabels:
+  environment: staging
+
+resources:
+  - ../../base
+
+patches:
+  # Create staging namespace
+  - target:
+      kind: Namespace
+      name: aura-health
+    patch: |
+      - op: replace
+        path: /metadata/name
+        value: aura-health-staging
+
+  # Backend: 2 replicas
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 200m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 256Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 512Mi
+
+  # Web: 2 replicas
+  - target:
+      kind: Deployment
+      name: web
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+
+  # ML Service: 2 replicas
+  - target:
+      kind: Deployment
+      name: ml-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+
+  # Redis: 2 replicas
+  - target:
+      kind: Deployment
+      name: redis
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+
+  # Kafka: 2 brokers
+  - target:
+      kind: StatefulSet
+      name: kafka
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+
+  # HPA Backend: min 2, max 8
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: backend-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 2
+      - op: replace
+        path: /spec/maxReplicas
+        value: 8
+
+  # HPA ML Service: min 2, max 5
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: ml-service-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 2
+      - op: replace
+        path: /spec/maxReplicas
+        value: 5
+
+  # HPA Web: min 2, max 6
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: web-hpa
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 2
+      - op: replace
+        path: /spec/maxReplicas
+        value: 6
+
+  # Ingress: staging hostnames
+  - target:
+      kind: Ingress
+      name: aura-ingress
+    patch: |
+      - op: replace
+        path: /spec/rules/0/host
+        value: api.staging.aurahealth.app
+      - op: replace
+        path: /spec/rules/1/host
+        value: app.staging.aurahealth.app
+      - op: replace
+        path: /spec/rules/2/host
+        value: ml.staging.aurahealth.app
+      - op: replace
+        path: /spec/tls/0/hosts
+        value:
+          - api.staging.aurahealth.app
+          - app.staging.aurahealth.app
+          - ml.staging.aurahealth.app
+      - op: replace
+        path: /spec/tls/0/secretName
+        value: aura-staging-tls-cert
+
+  # PostgreSQL: reduce storage for staging
+  - target:
+      kind: StatefulSet
+      name: postgres
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 250m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 512Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 2Gi
+
+# ConfigMap overrides for staging
+configMapGenerator:
+  - name: aura-config
+    behavior: merge
+    literals:
+      - NODE_ENV=staging
+      - LOG_LEVEL=info
+      - GRAPHQL_PLAYGROUND=false
+      - GRAPHQL_INTROSPECTION=true
+      - API_URL=https://api.staging.aurahealth.app
+      - APP_URL=https://app.staging.aurahealth.app
+      - CORS_ORIGINS=https://app.staging.aurahealth.app
+      - RATE_LIMIT_MAX=200
+
+images:
+  - name: aura-health/backend
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/backend
+    newTag: staging-latest
+  - name: aura-health/web
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/web
+    newTag: staging-latest
+  - name: aura-health/ml-service
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/ml-service
+    newTag: staging-latest

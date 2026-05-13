@@ -1,0 +1,79 @@
+###############################################################################
+# Aura Health - Backend API (Multi-stage build)
+# Node.js 22 + TypeScript
+###############################################################################
+
+# =============================================================================
+# Stage 1: Dependencies & Build
+# =============================================================================
+FROM node:22-alpine AS builder
+
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++ git
+
+WORKDIR /app
+
+# Copy workspace root config for monorepo resolution
+COPY package.json package-lock.json tsconfig.base.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/backend/package.json ./packages/backend/
+
+# Install all dependencies (including devDependencies for build)
+RUN npm ci --workspace=packages/backend --workspace=packages/shared --include-workspace-root
+
+# Copy source code
+COPY packages/shared/ ./packages/shared/
+COPY packages/backend/ ./packages/backend/
+
+# Build shared package first, then backend
+RUN npm run build --workspace=packages/shared && \
+    npm run build --workspace=packages/backend
+
+# Prune devDependencies for production image
+RUN npm prune --production --workspace=packages/backend --workspace=packages/shared
+
+# =============================================================================
+# Stage 2: Production Image
+# =============================================================================
+FROM node:22-alpine AS production
+
+# Security: install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init curl tini
+
+# Set production environment
+ENV NODE_ENV=production
+ENV PORT=4000
+
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup --system --gid 1001 aura && \
+    adduser --system --uid 1001 --ingroup aura aura
+
+# Copy only production artifacts
+COPY --from=builder --chown=aura:aura /app/node_modules ./node_modules
+COPY --from=builder --chown=aura:aura /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=aura:aura /app/packages/shared/package.json ./packages/shared/package.json
+COPY --from=builder --chown=aura:aura /app/packages/backend/dist ./packages/backend/dist
+COPY --from=builder --chown=aura:aura /app/packages/backend/package.json ./packages/backend/package.json
+COPY --from=builder --chown=aura:aura /app/packages/backend/node_modules ./packages/backend/node_modules
+COPY --from=builder --chown=aura:aura /app/package.json ./package.json
+
+# Copy migration files if they exist
+COPY --from=builder --chown=aura:aura /app/packages/backend/migrations ./packages/backend/migrations
+
+# Switch to non-root user
+USER aura
+
+# Expose API port
+EXPOSE 4000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:4000/health || exit 1
+
+# Use dumb-init to handle PID 1 properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["node", "packages/backend/dist/main.js"]

@@ -1,0 +1,90 @@
+###############################################################################
+# Aura Health - Mobile (React Native / Expo) Build Environment
+# Used for EAS Build or local development builds
+###############################################################################
+
+FROM node:22-bookworm
+
+# Metadata
+LABEL maintainer="Aura Health Engineering <engineering@aurahealth.app>"
+LABEL description="React Native / Expo build environment for Aura Health mobile app"
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    unzip \
+    openjdk-17-jdk-headless \
+    android-sdk \
+    watchman \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Java environment
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+# Set Android SDK environment
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=${ANDROID_HOME}
+ENV PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/emulator:${PATH}"
+
+# Install Android SDK command-line tools
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    cd ${ANDROID_HOME}/cmdline-tools && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip && \
+    unzip -q cmdline-tools.zip && \
+    mv cmdline-tools latest && \
+    rm cmdline-tools.zip
+
+# Accept Android SDK licenses and install required SDK components
+RUN yes | sdkmanager --licenses > /dev/null 2>&1 || true && \
+    sdkmanager \
+    "platform-tools" \
+    "platforms;android-34" \
+    "build-tools;34.0.0" \
+    "ndk;26.1.10909125" \
+    --sdk_root=${ANDROID_HOME} || true
+
+# Install Expo CLI and EAS CLI globally
+RUN npm install -g \
+    expo-cli@latest \
+    eas-cli@latest \
+    @expo/ngrok@latest \
+    sharp-cli@latest
+
+WORKDIR /app
+
+# Copy workspace root config for monorepo resolution
+COPY package.json package-lock.json tsconfig.base.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/mobile/package.json ./packages/mobile/
+
+# Install dependencies
+RUN npm ci --workspace=packages/mobile --workspace=packages/shared --include-workspace-root
+
+# Copy source code
+COPY packages/shared/ ./packages/shared/
+COPY packages/mobile/ ./packages/mobile/
+
+# Build shared package
+RUN npm run build --workspace=packages/shared
+
+# Create non-root user
+RUN groupadd --system --gid 1001 aura && \
+    useradd --system --uid 1001 --gid aura --create-home aura && \
+    chown -R aura:aura /app
+
+USER aura
+
+# Expose Metro Bundler port
+EXPOSE 8081
+
+# Default command: start Expo development server
+CMD ["npx", "expo", "start", "--host", "0.0.0.0", "--port", "8081"]

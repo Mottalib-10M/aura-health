@@ -1,0 +1,12 @@
+###############################################################################
+# Aura Health - Kubernetes Namespace
+###############################################################################
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aura-health
+  labels:
+    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/managed-by: kustomize
+  annotations:
+    description: "Aura Health platform namespace"

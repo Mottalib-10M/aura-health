@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Mobile
+packages/mobile/ios/Pods/
+packages/mobile/android/.gradle/
+packages/mobile/android/app/build/
+*.apk
+*.ipa
+
+# ML
+packages/ml-service/data/raw/
+packages/ml-service/data/models/*.pt
+packages/ml-service/data/models/*.bin
+packages/ml-service/.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Docker
+docker-compose.override.yml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+
+# Secrets
+*.pem
+*.key
+credentials.json
+service-account.json

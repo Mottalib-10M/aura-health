@@ -1,0 +1,102 @@
+{
+  "expo": {
+    "name": "Aura Health",
+    "slug": "aura-health",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icon.png",
+    "scheme": "aurahealth",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./src/assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D9488"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aurahealth.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Aura Health needs camera access for biometric enrollment and document scanning.",
+        "NSFaceIDUsageDescription": "Aura Health uses Face ID for secure, passwordless login.",
+        "NSBluetoothAlwaysUsageDescription": "Aura Health connects to medical wearables and health monitoring devices via Bluetooth.",
+        "NSBluetoothPeripheralUsageDescription": "Aura Health communicates with Bluetooth-enabled medical devices to sync your health data.",
+        "NSHealthShareUsageDescription": "Aura Health reads your health data to provide personalized health insights and triage recommendations.",
+        "NSHealthUpdateUsageDescription": "Aura Health writes health data from connected medical devices to your Health app.",
+        "NSMicrophoneUsageDescription": "Aura Health uses the microphone for voice-based symptom description during triage.",
+        "NSLocationWhenInUseUsageDescription": "Aura Health uses your location to find nearby healthcare facilities and for regional health insights."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.background-delivery": true
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/adaptive-icon.png",
+        "backgroundColor": "#0D9488"
+      },
+      "package": "com.aurahealth.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECORD_AUDIO",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "blockedPermissions": [
+        "READ_PHONE_STATE"
+      ]
+    },
+    "plugins": [
+      "expo-camera",
+      "expo-local-authentication",
+      "expo-secure-store",
+      "expo-notifications",
+      "expo-sqlite",
+      [
+        "expo-font",
+        {
+          "fonts": []
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "aura-health-mobile"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/aura-health-mobile",
+      "fallbackToCacheTimeout": 30000
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "notification": {
+      "icon": "./src/assets/notification-icon.png",
+      "color": "#0D9488",
+      "androidMode": "default",
+      "androidCollapsedTitle": "Aura Health"
+    }
+  }
+}

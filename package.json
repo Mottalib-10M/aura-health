@@ -1,0 +1,47 @@
+{
+  "name": "aura-health",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Aura Health - Central Asian Healthcare Ecosystem",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=packages/web",
+    "dev:backend": "npm run dev --workspace=packages/backend",
+    "dev:mobile": "npm run start --workspace=packages/mobile",
+    "dev:ml": "cd packages/ml-service && uvicorn src.api.main:app --reload --port 8000",
+    "build:web": "npm run build --workspace=packages/web",
+    "build:backend": "npm run build --workspace=packages/backend",
+    "build:shared": "npm run build --workspace=packages/shared",
+    "build:all": "npm run build:shared && npm run build:backend && npm run build:web",
+    "test": "npm run test --workspaces",
+    "test:backend": "npm run test --workspace=packages/backend",
+    "test:web": "npm run test --workspace=packages/web",
+    "lint": "npm run lint --workspaces",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
+    "db:migrate": "npm run migrate --workspace=packages/backend",
+    "db:seed": "npm run seed --workspace=packages/backend",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "k8s:deploy:dev": "kubectl apply -k infrastructure/k8s/overlays/dev",
+    "k8s:deploy:staging": "kubectl apply -k infrastructure/k8s/overlays/staging",
+    "k8s:deploy:prod": "kubectl apply -k infrastructure/k8s/overlays/production"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0",
+    "typescript": "^5.4.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.2.0"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  }
+}

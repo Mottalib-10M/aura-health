@@ -1,0 +1,206 @@
+###############################################################################
+# Aura Health - PostgreSQL StatefulSet with TimescaleDB
+###############################################################################
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: aura-health
+spec:
+  replicas: 1
+  serviceName: postgres-headless
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: aura-health
+    spec:
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      initContainers:
+        - name: init-timescaledb
+          image: timescale/timescaledb:latest-pg16
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "TimescaleDB init container - verifying extensions are available"
+              ls -la /usr/local/lib/postgresql/timescaledb*.so 2>/dev/null || \
+              ls -la /usr/lib/postgresql/*/lib/timescaledb*.so 2>/dev/null || \
+              echo "TimescaleDB extension files will be available in main container"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+      containers:
+        - name: postgres
+          image: timescale/timescaledb:latest-pg16
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: aura-secrets
+                  key: DATABASE_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: aura-secrets
+                  key: DATABASE_PASSWORD
+            - name: POSTGRES_DB
+              value: aura_health
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_INITDB_ARGS
+              value: "--encoding=UTF-8 --lc-collate=en_US.utf8 --lc-ctype=en_US.utf8"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-config
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgresql.conf
+              readOnly: true
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+        labels:
+          app.kubernetes.io/name: postgres
+          app.kubernetes.io/part-of: aura-health
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: gp3
+        resources:
+          requests:
+            storage: 50Gi
+---
+# Headless service for StatefulSet DNS
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: aura-health
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: postgresql
+  selector:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+---
+# Client-facing service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: aura-health
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: postgresql
+  selector:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+---
+# PostgreSQL configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: aura-health
+data:
+  postgresql.conf: |
+    # Connection Settings
+    listen_addresses = '*'
+    max_connections = 200
+    superuser_reserved_connections = 5
+
+    # Memory Settings
+    shared_buffers = 1GB
+    effective_cache_size = 3GB
+    work_mem = 16MB
+    maintenance_work_mem = 256MB
+
+    # WAL Settings
+    wal_buffers = 64MB
+    min_wal_size = 512MB
+    max_wal_size = 2GB
+    checkpoint_completion_target = 0.9
+
+    # Query Planner
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    default_statistics_target = 100
+
+    # Logging
+    log_min_duration_statement = 1000
+    log_checkpoints = on
+    log_connections = on
+    log_disconnections = on
+    log_lock_waits = on
+
+    # TimescaleDB
+    shared_preload_libraries = 'timescaledb'
+    timescaledb.max_background_workers = 8
+    timescaledb.telemetry_level = off

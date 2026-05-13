@@ -1,0 +1,144 @@
+###############################################################################
+# Aura Health - ML Service Deployment
+###############################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-service
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: ml-service
+    app.kubernetes.io/component: ml
+    app.kubernetes.io/part-of: aura-health
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ml-service
+      app.kubernetes.io/component: ml
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ml-service
+        app.kubernetes.io/component: ml
+        app.kubernetes.io/part-of: aura-health
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: ml-service-sa
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - ml-service
+                topologyKey: kubernetes.io/hostname
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: ml-service
+          image: aura-health/ml-service:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: aura-config
+            - secretRef:
+                name: aura-secrets
+          env:
+            - name: PORT
+              value: "8000"
+            - name: MODEL_CACHE_DIR
+              value: /app/models
+            - name: BATCH_SIZE
+              value: "32"
+            - name: MAX_WORKERS
+              value: "4"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+              nvidia.com/gpu: 1
+            limits:
+              cpu: "2"
+              memory: 2Gi
+              nvidia.com/gpu: 1
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 18
+          volumeMounts:
+            - name: model-cache
+              mountPath: /app/models
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+      volumes:
+        - name: model-cache
+          emptyDir:
+            sizeLimit: 5Gi
+      imagePullSecrets:
+        - name: ecr-registry-secret
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ml-service-sa
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: ml-service
+    app.kubernetes.io/part-of: aura-health
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::role/aura-ml-service-role

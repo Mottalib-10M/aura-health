@@ -1,0 +1,22 @@
+###############################################################################
+# Aura Health - ML Service
+###############################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-service
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: ml-service
+    app.kubernetes.io/component: ml
+    app.kubernetes.io/part-of: aura-health
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: ml-service
+    app.kubernetes.io/component: ml

@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-background: 255 255 255;
+    --color-foreground: 15 23 42;
+  }
+
+  .dark {
+    --color-background: 15 23 42;
+    --color-foreground: 241 245 249;
+  }
+
+  * {
+    @apply border-slate-200 dark:border-slate-700;
+  }
+
+  body {
+    @apply bg-surface text-slate-900 dark:bg-surface-dark dark:text-slate-100;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-slate-500;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50;
+  }
+
+  .urgency-low {
+    @apply bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800;
+  }
+
+  .urgency-moderate {
+    @apply bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800;
+  }
+
+  .urgency-high {
+    @apply bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800;
+  }
+
+  .urgency-critical {
+    @apply bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800;
+  }
+
+  .urgency-emergency {
+    @apply bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

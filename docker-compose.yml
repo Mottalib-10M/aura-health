@@ -1,0 +1,318 @@
+###############################################################################
+# Aura Health - Local Development Stack
+# Usage: docker compose up -d
+# Docs:  See scripts/setup-local.sh for full setup instructions
+###############################################################################
+
+version: "3.9"
+
+x-common-env: &common-env
+  NODE_ENV: development
+  LOG_LEVEL: debug
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 with TimescaleDB
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: aura-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: aura_admin
+      POSTGRES_PASSWORD: aura_dev_password
+      POSTGRES_DB: aura_health
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.utf8 --lc-ctype=en_US.utf8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - aura-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aura_admin -d aura_health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Redis 7
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: aura-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+        --maxmemory 256mb
+        --maxmemory-policy allkeys-lru
+        --appendonly yes
+        --appendfsync everysec
+    volumes:
+      - redis_data:/data
+    networks:
+      - aura-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # Elasticsearch 8
+  # ---------------------------------------------------------------------------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
+    container_name: aura-elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - cluster.name=aura-health-es
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - aura-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # Zookeeper (for Kafka)
+  # ---------------------------------------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.0
+    container_name: aura-zookeeper
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - aura-network
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Kafka
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: aura-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - aura-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # MinIO (S3-compatible object storage)
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: aura-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: aura_minio_admin
+      MINIO_ROOT_PASSWORD: aura_minio_secret
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - aura-network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Backend API (Node.js / GraphQL)
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.backend
+    container_name: aura-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      <<: *common-env
+      PORT: 4000
+      DATABASE_URL: postgresql://aura_admin:aura_dev_password@postgres:5432/aura_health
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: aura_minio_admin
+      S3_SECRET_KEY: aura_minio_secret
+      S3_BUCKET: aura-health-dev
+      S3_FORCE_PATH_STYLE: "true"
+      JWT_SECRET: dev-jwt-secret-replace-in-production
+      JWT_REFRESH_SECRET: dev-jwt-refresh-secret-replace-in-production
+      ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      CORS_ORIGINS: http://localhost:3000,http://localhost:8081
+      GRAPHQL_PLAYGROUND: "true"
+      RATE_LIMIT_MAX: 1000
+      RATE_LIMIT_WINDOW_MS: 60000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - aura-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Web Frontend (Vite / React)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+    container_name: aura-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_URL: http://localhost:4000
+      VITE_GRAPHQL_URL: http://localhost:4000/graphql
+      VITE_WS_URL: ws://localhost:4000/graphql
+      VITE_ENVIRONMENT: development
+    depends_on:
+      - backend
+    networks:
+      - aura-network
+
+  # ---------------------------------------------------------------------------
+  # ML Service (Python / FastAPI)
+  # ---------------------------------------------------------------------------
+  ml-service:
+    build:
+      context: .
+      dockerfile: packages/ml-service/Dockerfile
+    container_name: aura-ml-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *common-env
+      PORT: 8000
+      DATABASE_URL: postgresql://aura_admin:aura_dev_password@postgres:5432/aura_health
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+      MODEL_CACHE_DIR: /app/models
+      TRIAGE_MODEL_PATH: /app/models/triage
+      NLP_MODEL_PATH: /app/models/nlp
+      BATCH_SIZE: 32
+      MAX_WORKERS: 4
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ml_models:/app/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - aura-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+  kafka_data:
+    driver: local
+  minio_data:
+    driver: local
+  ml_models:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  aura-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

@@ -1,0 +1,103 @@
+###############################################################################
+# Aura Health - ConfigMap (non-secret configuration)
+###############################################################################
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aura-config
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: config
+    app.kubernetes.io/part-of: aura-health
+data:
+  # -------------------------------------------------------------------------
+  # Database
+  # -------------------------------------------------------------------------
+  DATABASE_HOST: postgres.aura-health.svc.cluster.local
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: aura_health
+  DATABASE_SSL: "true"
+  DATABASE_POOL_MIN: "5"
+  DATABASE_POOL_MAX: "20"
+
+  # -------------------------------------------------------------------------
+  # Redis
+  # -------------------------------------------------------------------------
+  REDIS_HOST: redis.aura-health.svc.cluster.local
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  REDIS_KEY_PREFIX: "aura:"
+
+  # -------------------------------------------------------------------------
+  # Kafka
+  # -------------------------------------------------------------------------
+  KAFKA_BROKERS: kafka-0.kafka-headless.aura-health.svc.cluster.local:9092,kafka-1.kafka-headless.aura-health.svc.cluster.local:9092,kafka-2.kafka-headless.aura-health.svc.cluster.local:9092
+  KAFKA_CLIENT_ID: aura-health
+  KAFKA_GROUP_ID: aura-health-consumers
+  KAFKA_RETRY_ATTEMPTS: "5"
+  KAFKA_RETRY_DELAY_MS: "1000"
+
+  # -------------------------------------------------------------------------
+  # Elasticsearch
+  # -------------------------------------------------------------------------
+  ELASTICSEARCH_URL: http://elasticsearch.aura-health.svc.cluster.local:9200
+  ELASTICSEARCH_INDEX_PREFIX: aura
+
+  # -------------------------------------------------------------------------
+  # API Configuration
+  # -------------------------------------------------------------------------
+  API_URL: https://api.aurahealth.app
+  APP_URL: https://app.aurahealth.app
+  ML_SERVICE_URL: http://ml-service.aura-health.svc.cluster.local:8000
+  GRAPHQL_PLAYGROUND: "false"
+  GRAPHQL_INTROSPECTION: "false"
+
+  # -------------------------------------------------------------------------
+  # Rate Limiting
+  # -------------------------------------------------------------------------
+  RATE_LIMIT_MAX: "100"
+  RATE_LIMIT_WINDOW_MS: "60000"
+  RATE_LIMIT_SKIP_SUCCESSFUL: "false"
+
+  # -------------------------------------------------------------------------
+  # CORS
+  # -------------------------------------------------------------------------
+  CORS_ORIGINS: https://app.aurahealth.app
+  CORS_METHODS: GET,POST,PUT,PATCH,DELETE,OPTIONS
+  CORS_CREDENTIALS: "true"
+
+  # -------------------------------------------------------------------------
+  # Logging & Observability
+  # -------------------------------------------------------------------------
+  LOG_LEVEL: info
+  LOG_FORMAT: json
+  ENABLE_METRICS: "true"
+  METRICS_PORT: "9090"
+
+  # -------------------------------------------------------------------------
+  # S3 / Object Storage
+  # -------------------------------------------------------------------------
+  S3_REGION: us-east-1
+  S3_BUCKET: aura-health-production
+  S3_FORCE_PATH_STYLE: "false"
+
+  # -------------------------------------------------------------------------
+  # Application Settings
+  # -------------------------------------------------------------------------
+  NODE_ENV: production
+  PORT: "4000"
+  SESSION_EXPIRY_HOURS: "24"
+  REFRESH_TOKEN_EXPIRY_DAYS: "30"
+  MAX_LOGIN_ATTEMPTS: "5"
+  LOCKOUT_DURATION_MINUTES: "15"
+  FILE_UPLOAD_MAX_SIZE_MB: "50"
+  PAGINATION_DEFAULT_LIMIT: "25"
+  PAGINATION_MAX_LIMIT: "100"
+
+  # -------------------------------------------------------------------------
+  # Feature Flags
+  # -------------------------------------------------------------------------
+  FEATURE_TELEHEALTH: "true"
+  FEATURE_AI_TRIAGE: "true"
+  FEATURE_WEARABLE_SYNC: "true"
+  FEATURE_CHAT: "true"

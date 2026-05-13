@@ -1,0 +1,163 @@
+###############################################################################
+# Aura Health - Horizontal Pod Autoscalers
+###############################################################################
+
+# ---------------------------------------------------------------------------
+# Backend API HPA
+# ---------------------------------------------------------------------------
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: aura-health
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 5
+  maxReplicas: 20
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 4
+          periodSeconds: 60
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 120
+        - type: Percent
+          value: 25
+          periodSeconds: 120
+      selectPolicy: Min
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000"
+
+---
+# ---------------------------------------------------------------------------
+# ML Service HPA
+# ---------------------------------------------------------------------------
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ml-service-hpa
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: ml-service
+    app.kubernetes.io/component: ml
+    app.kubernetes.io/part-of: aura-health
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ml-service
+  minReplicas: 3
+  maxReplicas: 10
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 120
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 600
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 300
+      selectPolicy: Min
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+    - type: Pods
+      pods:
+        metric:
+          name: ml_inference_queue_length
+        target:
+          type: AverageValue
+          averageValue: "50"
+
+---
+# ---------------------------------------------------------------------------
+# Web Frontend HPA
+# ---------------------------------------------------------------------------
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-hpa
+  namespace: aura-health
+  labels:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: aura-health
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web
+  minReplicas: 5
+  maxReplicas: 15
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 3
+          periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 120
+      selectPolicy: Min
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
