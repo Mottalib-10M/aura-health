@@ -475,14 +475,14 @@ export function SymptomTriage() {
                 <div>
                   <p className="text-sm text-slate-500">Triage Assessment</p>
                   <div className="mt-1">
-                    <UrgencyBadge level={triage.result.urgencyLevel} size="lg" />
+                    <UrgencyBadge level={triage.result.urgency_level} size="lg" />
                   </div>
                 </div>
                 <Shield className={cn(
                   'h-10 w-10',
-                  triage.result.urgencyLevel === 'emergency' || triage.result.urgencyLevel === 'critical'
+                  triage.result.urgency_level === 'emergency' || triage.result.urgency_level === 'critical'
                     ? 'text-red-500'
-                    : triage.result.urgencyLevel === 'high'
+                    : triage.result.urgency_level === 'high'
                       ? 'text-orange-500'
                       : 'text-green-500',
                 )} />
@@ -490,14 +490,14 @@ export function SymptomTriage() {
             </Card>
 
             {/* Red flags */}
-            {triage.result.redFlags.length > 0 && (
+            {triage.result.red_flags.length > 0 && (
               <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950" role="alert">
                 <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
                   <AlertTriangle className="h-5 w-5" />
                   <span className="font-semibold">Red Flags Detected</span>
                 </div>
                 <ul className="mt-2 space-y-1">
-                  {triage.result.redFlags.map((flag, idx) => (
+                  {triage.result.red_flags.map((flag, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-sm text-red-700 dark:text-red-300">
                       <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-500" />
                       {flag}
@@ -513,7 +513,7 @@ export function SymptomTriage() {
                 Recommended Specialists
               </h3>
               <div className="space-y-3">
-                {triage.result.recommendedSpecializations.map((spec, idx) => (
+                {triage.result.recommended_specializations.map((spec, idx) => (
                   <Card key={idx} hoverable>
                     <CardContent className="flex items-center justify-between p-4">
                       <div className="flex items-center gap-4">
@@ -525,13 +525,13 @@ export function SymptomTriage() {
                             {spec.specialty}
                           </p>
                           <p className="text-xs text-slate-500">
-                            Confidence: {formatConfidence(spec.confidenceScore)}
+                            Confidence: {formatConfidence(spec.confidence_score)}
                           </p>
                           <p className="mt-0.5 text-xs text-slate-400">
                             {spec.rationale}
                           </p>
                           <p className="text-xs text-slate-400">
-                            Est. wait: {formatDuration(spec.estimatedWaitTimeMinutes)}
+                            Est. wait: {formatDuration(spec.estimated_wait_time_minutes)}
                           </p>
                         </div>
                       </div>
@@ -548,14 +548,14 @@ export function SymptomTriage() {
             </div>
 
             {/* Suggested diagnostics */}
-            {triage.result.suggestedDiagnostics.length > 0 && (
+            {triage.result.suggested_diagnostics.length > 0 && (
               <Card>
                 <CardContent className="p-4">
                   <h3 className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
                     Suggested Diagnostic Tests
                   </h3>
                   <ul className="space-y-1">
-                    {triage.result.suggestedDiagnostics.map((test, idx) => (
+                    {triage.result.suggested_diagnostics.map((test, idx) => (
                       <li key={idx} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                         <FlaskConical className="h-3.5 w-3.5 text-slate-400" />
                         {test}

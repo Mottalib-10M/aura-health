@@ -266,7 +266,7 @@ async function detectOutbreak(
     // Update existing alert
     await query(
       `UPDATE outbreak_alerts
-       SET case_count = $3, growth_rate = $4, updated_at = NOW()
+       SET case_count = $2, growth_rate = $3, updated_at = NOW()
        WHERE id = $1`,
       [existingAlert.rows[0].id, values[values.length - 1], ewmaResult.zScore],
     );

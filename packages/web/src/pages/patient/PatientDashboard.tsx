@@ -25,11 +25,17 @@ import type { TimeSeriesDataPoint } from '@aura/shared/types/telemetry';
 // Mock data (would come from API in production)
 // ---------------------------------------------------------------------------
 
-const mockAnomalies = [
+const mockAnomalies: Array<{
+  id: string;
+  metricName: string;
+  severity: 'warning' | 'critical';
+  message: string;
+  timestamp: string;
+}> = [
   {
     id: '1',
     metricName: 'Heart Rate',
-    severity: 'warning' as const,
+    severity: 'warning',
     message: 'Heart rate elevated above normal range during rest periods. Average resting HR 95bpm (normal: 60-85bpm).',
     timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
   },

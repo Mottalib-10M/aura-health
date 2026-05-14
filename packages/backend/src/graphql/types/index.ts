@@ -373,6 +373,50 @@ export const typeDefs = /* GraphQL */ `
     notes: String
   }
 
+  input LoginInput {
+    email: String!
+    password: String!
+  }
+
+  input UpdatePatientInput {
+    patientId: ID!
+    firstName: String
+    lastName: String
+    phone: String
+    email: String
+    language: String
+    city: String
+  }
+
+  input TelemetryInput {
+    patientId: ID!
+    metricType: String!
+    value: Float!
+    deviceId: String
+    recordedAt: String
+  }
+
+  input ScheduleInput {
+    doctorId: ID!
+    dayOfWeek: Int!
+    startTime: String!
+    endTime: String!
+    isAvailable: Boolean!
+  }
+
+  input SurveillanceInput {
+    region: String!
+    city: String!
+    diseaseCode: String!
+    diseaseName: String!
+    caseCount: Int!
+    deathCount: Int!
+    recoveredCount: Int!
+    testPositivityRate: Float!
+    reportDate: String!
+    dataSource: String
+  }
+
   # ─────────────────────────────────────────────
   # Response Types
   # ─────────────────────────────────────────────
@@ -399,6 +443,7 @@ export const typeDefs = /* GraphQL */ `
 
   type AuthPayload {
     token: String!
+    refreshToken: String!
     user: UserInfo!
   }
 
@@ -406,6 +451,34 @@ export const typeDefs = /* GraphQL */ `
     id: ID!
     role: UserRole!
     auraId: String
+  }
+
+  type LongitudinalResult {
+    patientId: ID!
+    windowDays: Int!
+    trends: [TrendEntry!]!
+    summary: String
+  }
+
+  type TrendEntry {
+    metric: String!
+    values: [Float!]!
+    dates: [String!]!
+    trend: String!
+  }
+
+  type TelemetryData {
+    patientId: ID!
+    days: Int!
+    heartRateAvg: Float
+    spO2Avg: Float
+    readings: [TelemetryReading!]!
+  }
+
+  type TelemetryReading {
+    metricType: String!
+    value: Float!
+    recordedAt: String!
   }
 
   # ─────────────────────────────────────────────
@@ -438,6 +511,12 @@ export const typeDefs = /* GraphQL */ `
 
     # Triage History
     triageHistory(patientId: ID!): [TriageEvent!]!
+
+    # Doctor schedule
+    doctorSchedule(doctorId: ID!, date: String!): [TimeSlot!]!
+
+    # Patient telemetry
+    patientTelemetry(patientId: ID!, days: Int!): TelemetryData!
   }
 
   # ─────────────────────────────────────────────
@@ -462,5 +541,24 @@ export const typeDefs = /* GraphQL */ `
 
     # Admin
     updateVerificationStatus(input: UpdateVerificationStatusInput!): Doctor!
+
+    # Authentication
+    login(input: LoginInput!): AuthPayload!
+    refreshToken(refreshToken: String!): AuthPayload!
+
+    # Patient profile
+    updatePatientProfile(input: UpdatePatientInput!): Patient!
+
+    # Telemetry
+    ingestTelemetry(input: TelemetryInput!): Boolean!
+
+    # Longitudinal analysis
+    analyzeLongitudinalHealth(patientId: ID!, windowDays: Int!): LongitudinalResult!
+
+    # Doctor schedule management
+    manageDoctorSchedule(input: ScheduleInput!): Boolean!
+
+    # Surveillance
+    ingestSurveillanceData(input: SurveillanceInput!): Boolean!
   }
 `;

@@ -131,7 +131,7 @@ export function Modal({
             exit="exit"
           >
             {/* Header */}
-            {(title || true) && (
+            {(title || description) && (
               <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-700">
                 <div>
                   {title && (

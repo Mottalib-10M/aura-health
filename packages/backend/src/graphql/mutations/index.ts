@@ -1,12 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import { query, withTransaction } from '../../config/database.js';
-import { requireAuth, requireRole, signToken, UserRole, type AuthenticatedUser } from '../../middleware/auth.js';
+import { requireAuth, requireRole, requireOwnership, signToken, signRefreshToken, verifyRefreshToken, UserRole, type AuthenticatedUser } from '../../middleware/auth.js';
 import { executeTriage } from '../../services/ai/triage-engine.js';
 import { scheduleAppointment } from '../../modules/appointment/index.js';
 import { logger } from '../../utils/logger.js';
 import { generateCheckInCode } from '../../utils/crypto.js';
 import { auditPrescriptionOutcome } from '../../services/blockchain/index.js';
+import { ingestSurveillanceData as ingestSurveillanceDataModule } from '../../modules/analyst/index.js';
 
 // ---------------------------------------------------------------------------
 // Context
@@ -66,6 +67,7 @@ interface RegisterPatientInput {
   language?: string;
   phone?: string;
   email?: string;
+  password?: string;
 }
 
 interface RegisterDoctorInput {
@@ -78,6 +80,52 @@ interface RegisterDoctorInput {
   region: string;
   languages: string[];
   credentialDocumentUrl?: string;
+  email?: string;
+  password?: string;
+}
+
+interface LoginInput {
+  email: string;
+  password: string;
+}
+
+interface UpdatePatientInput {
+  patientId: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  email?: string;
+  language?: string;
+  city?: string;
+}
+
+interface TelemetryInput {
+  patientId: string;
+  metricType: string;
+  value: number;
+  deviceId?: string;
+  recordedAt?: string;
+}
+
+interface ScheduleInput {
+  doctorId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+}
+
+interface SurveillanceInput {
+  region: string;
+  city: string;
+  diseaseCode: string;
+  diseaseName: string;
+  caseCount: number;
+  deathCount: number;
+  recoveredCount: number;
+  testPositivityRate: number;
+  reportDate: string;
+  dataSource?: string;
 }
 
 interface UpdateVerificationStatusInput {
@@ -325,13 +373,19 @@ export const mutationResolvers = {
       const randomSuffix = Math.random().toString(36).slice(2, 10).toUpperCase();
       const auraId = `AH-${regionCode}-${randomSuffix}`;
 
+      // Hash password if provided
+      const passwordHash = input.password
+        ? await bcrypt.hash(input.password, 12)
+        : null;
+
       await query(
         `INSERT INTO patients (
           id, aura_id, first_name, last_name,
           date_of_birth, gender, blood_type,
           region, city, language,
+          password_hash, email,
           created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())`,
         [
           patientId,
           auraId,
@@ -343,15 +397,19 @@ export const mutationResolvers = {
           input.region,
           input.city,
           input.language ?? 'uz',
+          passwordHash,
+          input.email ?? null,
         ],
       );
 
       const token = signToken({ id: patientId, role: UserRole.PATIENT, auraId });
+      const refreshToken = signRefreshToken({ id: patientId, role: UserRole.PATIENT });
 
       logger.info({ patientId, auraId, region: input.region }, 'Patient registered');
 
       return {
         token,
+        refreshToken,
         user: {
           id: patientId,
           role: 'PATIENT',
@@ -377,13 +435,19 @@ export const mutationResolvers = {
 
       const doctorId = uuidv4();
 
+      // Hash password if provided
+      const passwordHash = input.password
+        ? await bcrypt.hash(input.password, 12)
+        : null;
+
       await query(
         `INSERT INTO doctors (
           id, first_name, last_name, license_number,
           specialty, subspecialty, institution_id,
           verification_status, region, languages,
-          consultation_count, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING', $8, $9, 0, NOW(), NOW())`,
+          consultation_count, password_hash, email,
+          created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING', $8, $9, 0, $10, $11, NOW(), NOW())`,
         [
           doctorId,
           input.firstName,
@@ -394,6 +458,8 @@ export const mutationResolvers = {
           input.institutionId ?? null,
           input.region,
           JSON.stringify(input.languages),
+          passwordHash,
+          input.email ?? null,
         ],
       );
 
@@ -407,11 +473,13 @@ export const mutationResolvers = {
       }
 
       const token = signToken({ id: doctorId, role: UserRole.DOCTOR });
+      const refreshToken = signRefreshToken({ id: doctorId, role: UserRole.DOCTOR });
 
       logger.info({ doctorId, specialty: input.specialty, region: input.region }, 'Doctor registered');
 
       return {
         token,
+        refreshToken,
         user: {
           id: doctorId,
           role: 'DOCTOR',
@@ -458,6 +526,309 @@ export const mutationResolvers = {
       );
 
       return mapDoctorRow(result.rows[0]);
+    },
+
+    // ── Login ─────────────────────────────────────────────────────────
+    async login(
+      _: unknown,
+      { input }: { input: LoginInput },
+    ) {
+      // Try patients first, then doctors
+      let userRow = await query(
+        `SELECT id, password_hash, 'patient' AS role, aura_id FROM patients WHERE email = $1`,
+        [input.email],
+      );
+
+      let role = UserRole.PATIENT;
+      let auraId: string | null = null;
+
+      if (userRow.rows.length === 0) {
+        userRow = await query(
+          `SELECT id, password_hash, 'doctor' AS role FROM doctors WHERE email = $1`,
+          [input.email],
+        );
+        role = UserRole.DOCTOR;
+      }
+
+      if (userRow.rows.length === 0) {
+        throw new Error('Invalid email or password');
+      }
+
+      const user = userRow.rows[0];
+      const passwordHash = user.password_hash as string | null;
+
+      if (!passwordHash) {
+        throw new Error('Account does not have a password configured');
+      }
+
+      const valid = await bcrypt.compare(input.password, passwordHash);
+      if (!valid) {
+        // Increment login attempts
+        if (role === UserRole.PATIENT) {
+          await query(
+            `UPDATE patients SET login_attempts = COALESCE(login_attempts, 0) + 1 WHERE id = $1`,
+            [user.id],
+          );
+        }
+        throw new Error('Invalid email or password');
+      }
+
+      auraId = (user.aura_id as string) ?? null;
+
+      // Reset login attempts and update last login
+      if (role === UserRole.PATIENT) {
+        await query(
+          `UPDATE patients SET login_attempts = 0, last_login_at = NOW() WHERE id = $1`,
+          [user.id],
+        );
+      } else {
+        await query(
+          `UPDATE doctors SET last_login_at = NOW() WHERE id = $1`,
+          [user.id],
+        );
+      }
+
+      const token = signToken({ id: user.id as string, role, auraId: auraId ?? undefined });
+      const refreshTokenValue = signRefreshToken({ id: user.id as string, role });
+
+      logger.info({ userId: user.id, role }, 'User logged in');
+
+      return {
+        token,
+        refreshToken: refreshTokenValue,
+        user: {
+          id: user.id,
+          role: role === UserRole.PATIENT ? 'PATIENT' : 'DOCTOR',
+          auraId,
+        },
+      };
+    },
+
+    // ── Refresh Token ─────────────────────────────────────────────────
+    async refreshToken(
+      _: unknown,
+      { refreshToken: tokenValue }: { refreshToken: string },
+    ) {
+      try {
+        const decoded = verifyRefreshToken(tokenValue);
+        const userId = decoded.sub;
+        const role = decoded.role;
+
+        let auraId: string | null = null;
+
+        if (role === UserRole.PATIENT) {
+          const result = await query(`SELECT aura_id FROM patients WHERE id = $1`, [userId]);
+          auraId = (result.rows[0]?.aura_id as string) ?? null;
+        }
+
+        const newToken = signToken({ id: userId, role, auraId: auraId ?? undefined });
+        const newRefreshToken = signRefreshToken({ id: userId, role });
+
+        return {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          user: {
+            id: userId,
+            role: role === UserRole.PATIENT ? 'PATIENT' : 'DOCTOR',
+            auraId,
+          },
+        };
+      } catch {
+        throw new Error('Invalid or expired refresh token');
+      }
+    },
+
+    // ── Update Patient Profile ────────────────────────────────────────
+    async updatePatientProfile(
+      _: unknown,
+      { input }: { input: UpdatePatientInput },
+      ctx: GraphQLContext,
+    ) {
+      requireAuth(ctx.user);
+      requireOwnership(ctx, input.patientId);
+
+      const setClauses: string[] = [];
+      const params: unknown[] = [];
+      let idx = 1;
+
+      if (input.firstName !== undefined) {
+        setClauses.push(`first_name = $${idx++}`);
+        params.push(input.firstName);
+      }
+      if (input.lastName !== undefined) {
+        setClauses.push(`last_name = $${idx++}`);
+        params.push(input.lastName);
+      }
+      if (input.language !== undefined) {
+        setClauses.push(`language = $${idx++}`);
+        params.push(input.language);
+      }
+      if (input.city !== undefined) {
+        setClauses.push(`city = $${idx++}`);
+        params.push(input.city);
+      }
+      if (input.email !== undefined) {
+        setClauses.push(`email = $${idx++}`);
+        params.push(input.email);
+      }
+
+      if (setClauses.length === 0) {
+        throw new Error('No fields to update');
+      }
+
+      setClauses.push(`updated_at = NOW()`);
+      params.push(input.patientId);
+
+      const result = await query(
+        `UPDATE patients SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *`,
+        params,
+      );
+
+      if (result.rows.length === 0) {
+        throw new Error('Patient not found');
+      }
+
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        auraId: row.aura_id,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        dateOfBirth: row.date_of_birth?.toISOString?.() ?? row.date_of_birth,
+        gender: row.gender,
+        bloodType: row.blood_type,
+        region: row.region,
+        city: row.city,
+        language: row.language,
+        createdAt: (row.created_at as Date)?.toISOString(),
+        updatedAt: (row.updated_at as Date)?.toISOString(),
+      };
+    },
+
+    // ── Ingest Telemetry ──────────────────────────────────────────────
+    async ingestTelemetry(
+      _: unknown,
+      { input }: { input: TelemetryInput },
+      ctx: GraphQLContext,
+    ) {
+      requireAuth(ctx.user);
+
+      await query(
+        `INSERT INTO biometric_telemetry (id, patient_id, metric_type, value, device_id, recorded_at)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          uuidv4(),
+          input.patientId,
+          input.metricType,
+          input.value,
+          input.deviceId ?? null,
+          input.recordedAt ? new Date(input.recordedAt) : new Date(),
+        ],
+      );
+
+      logger.info({ patientId: input.patientId, metric: input.metricType }, 'Telemetry ingested');
+      return true;
+    },
+
+    // ── Analyze Longitudinal Health ───────────────────────────────────
+    async analyzeLongitudinalHealth(
+      _: unknown,
+      { patientId, windowDays }: { patientId: string; windowDays: number },
+      ctx: GraphQLContext,
+    ) {
+      requireAuth(ctx.user);
+      requireOwnership(ctx, patientId);
+
+      const result = await query(
+        `SELECT metric_type, value, recorded_at
+         FROM biometric_telemetry
+         WHERE patient_id = $1 AND recorded_at > NOW() - ($2 || ' days')::INTERVAL
+         ORDER BY metric_type, recorded_at ASC`,
+        [patientId, windowDays],
+      );
+
+      // Group by metric type
+      const grouped = new Map<string, { values: number[]; dates: string[] }>();
+      for (const row of result.rows) {
+        const mt = row.metric_type as string;
+        if (!grouped.has(mt)) {
+          grouped.set(mt, { values: [], dates: [] });
+        }
+        const g = grouped.get(mt)!;
+        g.values.push(Number(row.value));
+        g.dates.push((row.recorded_at as Date).toISOString());
+      }
+
+      const trends = Array.from(grouped.entries()).map(([metric, data]) => {
+        // Simple trend: compare first half average to second half average
+        const mid = Math.floor(data.values.length / 2);
+        const firstHalf = data.values.slice(0, mid);
+        const secondHalf = data.values.slice(mid);
+        const avgFirst = firstHalf.length > 0 ? firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length : 0;
+        const avgSecond = secondHalf.length > 0 ? secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length : 0;
+        const trend = avgSecond > avgFirst * 1.05 ? 'increasing' : avgSecond < avgFirst * 0.95 ? 'decreasing' : 'stable';
+
+        return { metric, values: data.values, dates: data.dates, trend };
+      });
+
+      return {
+        patientId,
+        windowDays,
+        trends,
+        summary: `Analyzed ${result.rows.length} data points across ${grouped.size} metrics over ${windowDays} days.`,
+      };
+    },
+
+    // ── Manage Doctor Schedule ────────────────────────────────────────
+    async manageDoctorSchedule(
+      _: unknown,
+      { input }: { input: ScheduleInput },
+      ctx: GraphQLContext,
+    ) {
+      requireRole(ctx.user, UserRole.DOCTOR, UserRole.SYSTEM_ADMIN, UserRole.HOSPITAL_ADMIN);
+
+      await query(
+        `INSERT INTO doctor_schedules (id, doctor_id, day_of_week, start_time, end_time, is_available)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (doctor_id, day_of_week, start_time)
+         DO UPDATE SET end_time = EXCLUDED.end_time, is_available = EXCLUDED.is_available`,
+        [
+          uuidv4(),
+          input.doctorId,
+          input.dayOfWeek,
+          input.startTime,
+          input.endTime,
+          input.isAvailable,
+        ],
+      );
+
+      logger.info({ doctorId: input.doctorId, dayOfWeek: input.dayOfWeek }, 'Doctor schedule updated');
+      return true;
+    },
+
+    // ── Ingest Surveillance Data ──────────────────────────────────────
+    async ingestSurveillanceData(
+      _: unknown,
+      { input }: { input: SurveillanceInput },
+      ctx: GraphQLContext,
+    ) {
+      requireRole(ctx.user, UserRole.ANALYST, UserRole.SYSTEM_ADMIN, UserRole.HOSPITAL_ADMIN);
+
+      await ingestSurveillanceDataModule([{
+        region: input.region,
+        city: input.city,
+        diseaseCode: input.diseaseCode,
+        diseaseName: input.diseaseName,
+        caseCount: input.caseCount,
+        deathCount: input.deathCount,
+        recoveredCount: input.recoveredCount,
+        testPositivityRate: input.testPositivityRate,
+        reportDate: input.reportDate,
+        dataSource: input.dataSource,
+      }]);
+
+      logger.info({ region: input.region, diseaseCode: input.diseaseCode }, 'Surveillance data ingested via GraphQL');
+      return true;
     },
   },
 };

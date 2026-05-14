@@ -27,7 +27,7 @@ const envSchema = z.object({
   KAFKA_BROKERS: z.string().min(1).default('localhost:9092'),
 
   // JWT
-  JWT_SECRET: z.string().min(16).default('replace-with-a-strong-256-bit-secret'),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('8h'),
 
   // AI / LiteLLM

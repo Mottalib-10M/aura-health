@@ -1,7 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Moon, Sun, Globe, Search, type LucideIcon } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
+import { NotificationPanel } from './NotificationPanel';
 
 // ---------------------------------------------------------------------------
 // Language options (Central Asian focus)
@@ -94,16 +96,21 @@ function useTheme() {
 // ---------------------------------------------------------------------------
 
 export function Header() {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
+  const logout = useAuthStore((s) => s.logout);
   const { isDark, toggle: toggleTheme } = useTheme();
 
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [notificationCount] = useState(3);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(3);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const langMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -118,6 +125,59 @@ export function Header() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleSearch = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(e.target.value);
+    },
+    [],
+  );
+
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && searchQuery.trim()) {
+        // Navigate based on search term - basic keyword matching
+        const q = searchQuery.toLowerCase();
+        if (q.includes('appointment')) {
+          navigate('/patient/appointments');
+        } else if (q.includes('record') || q.includes('medical')) {
+          navigate('/patient/records');
+        } else if (q.includes('device') || q.includes('wearable')) {
+          navigate('/patient/devices');
+        } else if (q.includes('telemetry') || q.includes('vital')) {
+          navigate('/patient/telemetry');
+        } else if (q.includes('triage')) {
+          navigate('/patient/triage');
+        } else if (q.includes('profile') || q.includes('setting')) {
+          navigate('/patient/profile');
+        }
+        setSearchQuery('');
+      }
+    },
+    [searchQuery, navigate],
+  );
+
+  const handleNotificationToggle = useCallback(() => {
+    setShowNotifications((prev) => !prev);
+    setShowUserMenu(false);
+    setShowLangMenu(false);
+  }, []);
+
+  const handleProfileSettings = useCallback(() => {
+    setShowUserMenu(false);
+    navigate('/patient/profile');
+  }, [navigate]);
+
+  const handlePrivacySecurity = useCallback(() => {
+    setShowUserMenu(false);
+    navigate('/patient/profile');
+  }, [navigate]);
+
+  const handleLogout = useCallback(() => {
+    setShowUserMenu(false);
+    logout();
+    navigate('/login');
+  }, [logout, navigate]);
 
   const currentLang = languages.find((l) => l.code === user?.preferredLanguage) ?? languages[4];
 
@@ -136,6 +196,9 @@ export function Header() {
           <input
             type="search"
             placeholder="Search patients, records, or features..."
+            value={searchQuery}
+            onChange={handleSearch}
+            onKeyDown={handleSearchKeyDown}
             className={cn(
               'w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm',
               'text-slate-900 placeholder:text-slate-400',
@@ -213,11 +276,18 @@ export function Header() {
         />
 
         {/* Notifications */}
-        <IconButton
-          icon={Bell}
-          label="View notifications"
-          badge={notificationCount}
-        />
+        <div ref={notificationRef} className="relative">
+          <IconButton
+            icon={Bell}
+            label="View notifications"
+            badge={notificationCount}
+            onClick={handleNotificationToggle}
+          />
+          <NotificationPanel
+            open={showNotifications}
+            onClose={() => setShowNotifications(false)}
+          />
+        </div>
 
         {/* User avatar / menu */}
         <div ref={userMenuRef} className="relative ml-2">
@@ -263,6 +333,7 @@ export function Header() {
               <button
                 type="button"
                 role="menuitem"
+                onClick={handleProfileSettings}
                 className="flex w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 Profile Settings
@@ -270,6 +341,7 @@ export function Header() {
               <button
                 type="button"
                 role="menuitem"
+                onClick={handlePrivacySecurity}
                 className="flex w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 Privacy & Security
@@ -281,6 +353,16 @@ export function Header() {
               >
                 Help & Support
               </button>
+              <div className="border-t border-slate-100 dark:border-slate-700">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleLogout}
+                  className="flex w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                >
+                  Sign Out
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { GraphQLError } from 'graphql';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 
@@ -159,4 +160,41 @@ export function requireRole(user: AuthenticatedUser | undefined, ...roles: UserR
     throw new Error('FORBIDDEN');
   }
   return authed;
+}
+
+/**
+ * Require that the authenticated user owns the requested resource or has
+ * elevated privileges (admin/doctor/analyst).
+ */
+export function requireOwnership(context: { user?: AuthenticatedUser }, resourcePatientId: string): void {
+  const user = context.user;
+  if (!user) throw new GraphQLError('Not authenticated');
+  if (user.role === UserRole.SYSTEM_ADMIN) return; // admins can access all
+  if (user.role === UserRole.PATIENT && user.id !== resourcePatientId) {
+    throw new GraphQLError('Access denied: you can only view your own data');
+  }
+  // doctors can view assigned patients (simplified check)
+  if (user.role === UserRole.DOCTOR) return; // doctors need broader access for clinical work
+  if (user.role === UserRole.ANALYST) return; // analysts access anonymized data
+}
+
+/**
+ * Issue a signed refresh token (longer-lived) for a given user.
+ */
+export function signRefreshToken(user: { id: string; role: UserRole }): string {
+  const payload: Pick<JwtPayload, 'sub' | 'role'> = {
+    sub: user.id,
+    role: user.role,
+  };
+
+  return jwt.sign(payload, config.jwt.secret, {
+    expiresIn: '30d',
+  });
+}
+
+/**
+ * Verify a refresh token and return the decoded payload.
+ */
+export function verifyRefreshToken(token: string): JwtPayload {
+  return jwt.verify(token, config.jwt.secret) as JwtPayload;
 }

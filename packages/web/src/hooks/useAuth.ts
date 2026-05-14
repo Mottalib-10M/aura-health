@@ -73,7 +73,7 @@ export function useAuth() {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: (variables: LoginVariables) =>
-      gqlRequest<{ login: AuthResponse }>(LOGIN, variables),
+      gqlRequest<{ login: AuthResponse }>(LOGIN, { ...variables }),
     onSuccess: ({ login }) => {
       store.login(login.user, login.token, login.refreshToken);
       navigate(ROLE_ROUTES[login.user.role] ?? '/');

@@ -148,22 +148,48 @@ async function bootstrap(): Promise<void> {
 
   // ── Health check ───────────────────────────────────────────────────
   app.get('/health', async (_req, res) => {
+    let postgresStatus = 'down';
+    let redisStatus = 'down';
+
+    // Check PostgreSQL
     try {
       const dbResult = await pool.query('SELECT 1');
-      res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        version: process.env.npm_package_version ?? '0.1.0',
-        uptime: process.uptime(),
-        database: dbResult.rows.length > 0 ? 'connected' : 'error',
-      });
+      postgresStatus = dbResult.rows.length > 0 ? 'up' : 'down';
     } catch {
-      res.status(503).json({
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
-        database: 'disconnected',
-      });
+      postgresStatus = 'down';
     }
+
+    // Check Redis
+    try {
+      const Redis = (await import('ioredis')).default;
+      const redisClient = new Redis({
+        host: config.redis.host,
+        port: config.redis.port,
+        password: config.redis.password || undefined,
+        connectTimeout: 3000,
+        lazyConnect: true,
+      });
+      await redisClient.connect();
+      const pong = await redisClient.ping();
+      redisStatus = pong === 'PONG' ? 'up' : 'down';
+      await redisClient.quit();
+    } catch {
+      redisStatus = 'down';
+    }
+
+    const overallStatus = postgresStatus === 'up' && redisStatus === 'up' ? 'healthy' : 'unhealthy';
+    const statusCode = overallStatus === 'healthy' ? 200 : 503;
+
+    res.status(statusCode).json({
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version ?? '0.1.0',
+      uptime: process.uptime(),
+      dependencies: {
+        postgres: postgresStatus,
+        redis: redisStatus,
+      },
+    });
   });
 
   // ── GraphQL endpoint ───────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { query } from '../../config/database.js';
-import { requireAuth, requireRole, UserRole, type AuthenticatedUser } from '../../middleware/auth.js';
+import { requireAuth, requireRole, requireOwnership, UserRole, type AuthenticatedUser } from '../../middleware/auth.js';
 import { logger } from '../../utils/logger.js';
 
 // ---------------------------------------------------------------------------
@@ -17,6 +17,7 @@ export const queryResolvers = {
     // ── Patient ──────────────────────────────────────────────────────
     async patient(_: unknown, { id }: { id: string }, ctx: GraphQLContext) {
       requireAuth(ctx.user);
+      requireOwnership(ctx, id);
       const result = await query(
         `SELECT * FROM patients WHERE id = $1`,
         [id],
@@ -116,6 +117,7 @@ export const queryResolvers = {
       ctx: GraphQLContext,
     ) {
       requireAuth(ctx.user);
+      requireOwnership(ctx, patientId);
       let sql = `SELECT * FROM appointments WHERE patient_id = $1`;
       const params: unknown[] = [patientId];
 
@@ -238,11 +240,75 @@ export const queryResolvers = {
       ctx: GraphQLContext,
     ) {
       requireAuth(ctx.user);
+      requireOwnership(ctx, patientId);
       const result = await query(
         `SELECT * FROM triage_events WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 50`,
         [patientId],
       );
       return result.rows.map(mapTriageEventRow);
+    },
+
+    // ── Doctor Schedule ───────────────────────────────────────────────
+    async doctorSchedule(
+      _: unknown,
+      { doctorId, date }: { doctorId: string; date: string },
+      ctx: GraphQLContext,
+    ) {
+      requireAuth(ctx.user);
+      const dayOfWeek = new Date(date).getDay();
+      const result = await query(
+        `SELECT start_time, end_time, is_available
+         FROM doctor_schedules
+         WHERE doctor_id = $1 AND day_of_week = $2
+         ORDER BY start_time ASC`,
+        [doctorId, dayOfWeek],
+      );
+      return result.rows.map((row) => ({
+        startTime: String(row.start_time),
+        endTime: String(row.end_time),
+        isAvailable: row.is_available as boolean,
+      }));
+    },
+
+    // ── Patient Telemetry ─────────────────────────────────────────────
+    async patientTelemetry(
+      _: unknown,
+      { patientId, days }: { patientId: string; days: number },
+      ctx: GraphQLContext,
+    ) {
+      requireAuth(ctx.user);
+      requireOwnership(ctx, patientId);
+
+      const result = await query(
+        `SELECT metric_type, value, recorded_at
+         FROM biometric_telemetry
+         WHERE patient_id = $1 AND recorded_at > NOW() - ($2 || ' days')::INTERVAL
+         ORDER BY recorded_at DESC
+         LIMIT 1000`,
+        [patientId, days],
+      );
+
+      // Calculate averages
+      const hrValues = result.rows
+        .filter((r) => r.metric_type === 'heart_rate')
+        .map((r) => Number(r.value));
+      const spo2Values = result.rows
+        .filter((r) => r.metric_type === 'spo2')
+        .map((r) => Number(r.value));
+
+      const avg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+
+      return {
+        patientId,
+        days,
+        heartRateAvg: avg(hrValues),
+        spO2Avg: avg(spo2Values),
+        readings: result.rows.map((row) => ({
+          metricType: row.metric_type as string,
+          value: Number(row.value),
+          recordedAt: (row.recorded_at as Date).toISOString(),
+        })),
+      };
     },
   },
 

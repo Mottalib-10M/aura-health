@@ -145,9 +145,7 @@ export async function performTriage(request: TriageRequest): Promise<TriageResul
         await query(
           `UPDATE triage_events
            SET follow_up_scheduled = true
-           WHERE patient_id = $1
-           ORDER BY created_at DESC
-           LIMIT 1`,
+           WHERE id = (SELECT id FROM triage_events WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 1)`,
           [request.patientId],
         );
 
@@ -226,7 +224,7 @@ export async function getTriageStats(patientId: string): Promise<{
   const specialtyResult = await query(
     `SELECT specialty, COUNT(*) AS count
      FROM (
-       SELECT unnest(recommended_specializations) AS specialty
+       SELECT jsonb_array_elements_text(recommended_specializations) AS specialty
        FROM triage_events
        WHERE patient_id = $1
      ) sub
