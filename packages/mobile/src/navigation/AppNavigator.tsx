@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -40,6 +40,62 @@ import type {
 
 import { Colors } from '../utils/formatters';
 import { TabBarIcon } from '../components/ui/TabBarIcon';
+
+// ---------------------------------------------------------------------------
+// Placeholder Screen (for not-yet-implemented sub-screens)
+// ---------------------------------------------------------------------------
+
+function PlaceholderScreen({ navigation, route }: { navigation: any; route: any }) {
+  return (
+    <View style={placeholderStyles.container}>
+      <Text style={placeholderStyles.title}>Coming Soon</Text>
+      <Text style={placeholderStyles.subtitle}>
+        This screen is under development.
+      </Text>
+      <Pressable
+        style={placeholderStyles.backButton}
+        onPress={() => navigation.goBack()}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Text style={placeholderStyles.backButtonText}>Go Back</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const placeholderStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    padding: 24,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.darkBlue,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  backButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: Colors.primary,
+  },
+  backButtonText: {
+    color: Colors.white,
+    fontWeight: '600',
+    fontSize: 15,
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Stack & Tab Constructors
@@ -109,6 +165,16 @@ function HomeNavigator() {
         component={HomeScreen}
         options={{ headerShown: false }}
       />
+      <HomeStack.Screen
+        name="Notifications"
+        component={PlaceholderScreen}
+        options={{ title: 'Notifications' }}
+      />
+      <HomeStack.Screen
+        name="AlertDetail"
+        component={PlaceholderScreen}
+        options={{ title: 'Alert Detail' }}
+      />
     </HomeStack.Navigator>
   );
 }
@@ -128,6 +194,16 @@ function TriageNavigator() {
           headerShown: false,
         }}
       />
+      <TriageStack.Screen
+        name="TriageResults"
+        component={PlaceholderScreen}
+        options={{ title: 'Triage Results' }}
+      />
+      <TriageStack.Screen
+        name="BookFromTriage"
+        component={PlaceholderScreen}
+        options={{ title: 'Book Appointment' }}
+      />
     </TriageStack.Navigator>
   );
 }
@@ -143,6 +219,21 @@ function AppointmentsNavigator() {
         name="Appointments"
         component={AppointmentsScreen}
         options={{ title: 'Appointments' }}
+      />
+      <AppointmentsStack.Screen
+        name="AppointmentDetail"
+        component={PlaceholderScreen}
+        options={{ title: 'Appointment Detail' }}
+      />
+      <AppointmentsStack.Screen
+        name="BookAppointment"
+        component={PlaceholderScreen}
+        options={{ title: 'Book Appointment' }}
+      />
+      <AppointmentsStack.Screen
+        name="DoctorProfile"
+        component={PlaceholderScreen}
+        options={{ title: 'Doctor Profile' }}
       />
     </AppointmentsStack.Navigator>
   );
@@ -160,6 +251,16 @@ function HealthNavigator() {
         component={HealthScreen}
         options={{ title: 'Health Data' }}
       />
+      <HealthStack.Screen
+        name="MetricDetail"
+        component={PlaceholderScreen}
+        options={{ title: 'Metric Detail' }}
+      />
+      <HealthStack.Screen
+        name="ConnectWearable"
+        component={PlaceholderScreen}
+        options={{ title: 'Connect Wearable' }}
+      />
     </HealthStack.Navigator>
   );
 }
@@ -175,6 +276,46 @@ function ProfileNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{ title: 'Profile' }}
+      />
+      <ProfileStack.Screen
+        name="EditProfile"
+        component={PlaceholderScreen}
+        options={{ title: 'Edit Profile' }}
+      />
+      <ProfileStack.Screen
+        name="MedicalHistory"
+        component={PlaceholderScreen}
+        options={{ title: 'Medical History' }}
+      />
+      <ProfileStack.Screen
+        name="ConnectedDevices"
+        component={PlaceholderScreen}
+        options={{ title: 'Connected Devices' }}
+      />
+      <ProfileStack.Screen
+        name="PrescriptionHistory"
+        component={PlaceholderScreen}
+        options={{ title: 'Prescription History' }}
+      />
+      <ProfileStack.Screen
+        name="NotificationSettings"
+        component={PlaceholderScreen}
+        options={{ title: 'Notification Preferences' }}
+      />
+      <ProfileStack.Screen
+        name="LanguageSettings"
+        component={PlaceholderScreen}
+        options={{ title: 'Language' }}
+      />
+      <ProfileStack.Screen
+        name="DataSharingSettings"
+        component={PlaceholderScreen}
+        options={{ title: 'Data Sharing' }}
+      />
+      <ProfileStack.Screen
+        name="About"
+        component={PlaceholderScreen}
+        options={{ title: 'About Aura Health' }}
       />
     </ProfileStack.Navigator>
   );

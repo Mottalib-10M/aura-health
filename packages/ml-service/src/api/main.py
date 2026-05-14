@@ -14,6 +14,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from collections import defaultdict as _defaultdict
 
 from src.config.settings import get_settings
 from src.utils.logger import configure_logging, get_logger
@@ -164,6 +165,71 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         max_age=600,
     )
+
+    # -- Rate Limiting Middleware -----------------------------------------
+    # In-memory rate limiter: tracks request timestamps per (user, endpoint_group)
+    _rate_limit_store: dict[str, list[float]] = _defaultdict(list)
+
+    # Rate limits per endpoint group: (max_requests, window_seconds)
+    _RATE_LIMITS: dict[str, tuple[int, int]] = {
+        "triage": (10, 60),
+        "ocr": (5, 60),
+        "default": (30, 60),
+    }
+
+    def _get_rate_limit_group(path: str) -> str:
+        """Determine the rate limit group for a given path."""
+        if path.startswith("/triage"):
+            return "triage"
+        if path.startswith("/ocr"):
+            return "ocr"
+        return "default"
+
+    @app.middleware("http")
+    async def rate_limit_middleware(request: Request, call_next: Any) -> Response:
+        """Enforce per-user rate limits based on endpoint group."""
+        path = request.url.path
+
+        # Skip rate limiting for infrastructure endpoints
+        if path in ("/health", "/metrics", "/ready", "/docs", "/redoc", "/openapi.json"):
+            return await call_next(request)
+
+        # Identify user from Authorization header or fall back to client IP
+        auth_header = request.headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            # Use a hash of the token as the user key
+            import hashlib as _hl
+            user_key = _hl.sha256(auth_header.encode()).hexdigest()[:16]
+        else:
+            user_key = request.client.host if request.client else "unknown"
+
+        group = _get_rate_limit_group(path)
+        max_requests, window_seconds = _RATE_LIMITS[group]
+        bucket_key = f"{user_key}:{group}"
+
+        now = time.monotonic()
+        # Clean expired entries
+        _rate_limit_store[bucket_key] = [
+            ts for ts in _rate_limit_store[bucket_key]
+            if now - ts < window_seconds
+        ]
+
+        if len(_rate_limit_store[bucket_key]) >= max_requests:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    "error": "rate_limit_exceeded",
+                    "message": (
+                        f"Rate limit exceeded: {max_requests} requests per "
+                        f"{window_seconds}s for {group} endpoints."
+                    ),
+                    "retry_after_seconds": window_seconds,
+                },
+                headers={"Retry-After": str(window_seconds)},
+            )
+
+        _rate_limit_store[bucket_key].append(now)
+        return await call_next(request)
 
     # -- Request/Response Middleware --------------------------------------
     @app.middleware("http")

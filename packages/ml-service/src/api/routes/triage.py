@@ -8,6 +8,7 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.api.auth import require_auth
 from src.models.triage.schemas import (
     TriageBatchInput,
     TriageBatchOutput,
@@ -19,7 +20,7 @@ from src.utils.metrics import REQUEST_COUNT, REQUEST_LATENCY
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/triage", tags=["Triage"])
+router = APIRouter(prefix="/triage", tags=["Triage"], dependencies=[Depends(require_auth)])
 
 
 def _get_triage_engine() -> Any:

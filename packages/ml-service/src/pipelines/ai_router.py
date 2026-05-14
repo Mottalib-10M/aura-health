@@ -6,6 +6,7 @@ estimation for all AI/ML model calls in the Aura Health platform.
 
 from __future__ import annotations
 
+import os
 import time
 from collections import defaultdict
 from typing import Any
@@ -130,11 +131,11 @@ class AIRouter:
         if self._settings.LITELLM_API_KEY:
             litellm.api_key = self._settings.LITELLM_API_KEY
         if self._settings.DEEPSEEK_API_KEY:
-            litellm.deepseek_key = self._settings.DEEPSEEK_API_KEY
+            os.environ["DEEPSEEK_API_KEY"] = self._settings.DEEPSEEK_API_KEY
         if self._settings.OPENAI_API_KEY:
-            litellm.openai_key = self._settings.OPENAI_API_KEY
+            os.environ["OPENAI_API_KEY"] = self._settings.OPENAI_API_KEY
         if self._settings.ANTHROPIC_API_KEY:
-            litellm.anthropic_key = self._settings.ANTHROPIC_API_KEY
+            os.environ["ANTHROPIC_API_KEY"] = self._settings.ANTHROPIC_API_KEY
 
         # Disable LiteLLM telemetry
         litellm.telemetry = False

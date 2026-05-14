@@ -266,6 +266,98 @@ export function TriageScreen() {
               </View>
             )}
 
+            {question.type === 'checkbox' && question.options && (
+              <View style={styles.optionsContainer}>
+                {question.options.map((option) => {
+                  const selectedValues = (followUpAnswers[question.id] as string[]) || [];
+                  const isChecked = selectedValues.includes(option.value);
+                  return (
+                    <Pressable
+                      key={option.value}
+                      style={[
+                        styles.radioOption,
+                        isChecked && styles.radioOptionSelected,
+                      ]}
+                      onPress={() =>
+                        setFollowUpAnswers((prev) => {
+                          const current = (prev[question.id] as string[]) || [];
+                          const next = isChecked
+                            ? current.filter((v) => v !== option.value)
+                            : [...current, option.value];
+                          return { ...prev, [question.id]: next };
+                        })
+                      }
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: isChecked }}
+                    >
+                      <View style={[styles.checkboxBox, isChecked && styles.checkboxBoxChecked]}>
+                        {isChecked && (
+                          <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+                            <Path d="M20 6L9 17L4 12" stroke={Colors.white} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                          </Svg>
+                        )}
+                      </View>
+                      <Text style={styles.radioLabel}>{option.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+
+            {question.type === 'slider' && question.sliderConfig && (
+              <View style={styles.sliderContainer}>
+                <View style={styles.sliderHeader}>
+                  <Text style={styles.sliderValue}>
+                    {(followUpAnswers[question.id] as number) ?? question.sliderConfig.min}
+                    {question.sliderConfig.unit ? ` ${question.sliderConfig.unit}` : ''}
+                  </Text>
+                </View>
+                <View style={styles.sliderInputRow}>
+                  <Pressable
+                    style={styles.sliderButton}
+                    onPress={() => {
+                      const current = (followUpAnswers[question.id] as number) ?? question.sliderConfig!.min;
+                      const next = Math.max(question.sliderConfig!.min, current - question.sliderConfig!.step);
+                      setFollowUpAnswers((prev) => ({ ...prev, [question.id]: next }));
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Decrease value"
+                  >
+                    <Text style={styles.sliderButtonText}>-</Text>
+                  </Pressable>
+                  <TextInput
+                    label=""
+                    value={String((followUpAnswers[question.id] as number) ?? question.sliderConfig.min)}
+                    onChangeText={(text) => {
+                      const num = parseFloat(text);
+                      if (!isNaN(num)) {
+                        const clamped = Math.min(question.sliderConfig!.max, Math.max(question.sliderConfig!.min, num));
+                        setFollowUpAnswers((prev) => ({ ...prev, [question.id]: clamped }));
+                      }
+                    }}
+                    keyboardType="numeric"
+                    containerStyle={styles.sliderInput}
+                  />
+                  <Pressable
+                    style={styles.sliderButton}
+                    onPress={() => {
+                      const current = (followUpAnswers[question.id] as number) ?? question.sliderConfig!.min;
+                      const next = Math.min(question.sliderConfig!.max, current + question.sliderConfig!.step);
+                      setFollowUpAnswers((prev) => ({ ...prev, [question.id]: next }));
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Increase value"
+                  >
+                    <Text style={styles.sliderButtonText}>+</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.sliderRange}>
+                  <Text style={styles.sliderRangeText}>{question.sliderConfig.min}</Text>
+                  <Text style={styles.sliderRangeText}>{question.sliderConfig.max}</Text>
+                </View>
+              </View>
+            )}
+
             {question.type === 'text' && (
               <TextInput
                 label=""
@@ -822,6 +914,62 @@ const styles = StyleSheet.create({
   radioLabel: {
     ...Typography.bodySm,
     color: Colors.textPrimary,
+  },
+  checkboxBox: {
+    width: 20,
+    height: 20,
+    borderRadius: Radius.xs,
+    borderWidth: 2,
+    borderColor: Colors.gray400,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxBoxChecked: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  sliderContainer: {
+    paddingVertical: Spacing.sm,
+  },
+  sliderHeader: {
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  sliderValue: {
+    ...Typography.h4,
+    color: Colors.primary,
+  },
+  sliderInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.md,
+  },
+  sliderButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sliderButtonText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  sliderInput: {
+    width: 80,
+    marginBottom: 0,
+  },
+  sliderRange: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: Spacing.sm,
+  },
+  sliderRangeText: {
+    ...Typography.caption,
+    color: Colors.textTertiary,
   },
   noMargin: {
     marginBottom: 0,

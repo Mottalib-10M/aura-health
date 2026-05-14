@@ -8,8 +8,6 @@ weighted ensemble and maps scores to alert levels with automated response action
 from __future__ import annotations
 
 import time
-import uuid
-from datetime import date, datetime, timedelta
 from typing import Any
 
 import numpy as np

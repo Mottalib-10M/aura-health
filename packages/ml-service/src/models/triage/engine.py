@@ -7,7 +7,6 @@ against SNOMED CT codes and confidence thresholds.
 
 from __future__ import annotations
 
-import hashlib
 import re
 import time
 from typing import Any
@@ -28,6 +27,7 @@ from src.models.triage.schemas import (
     TriageSeverity,
 )
 from src.pipelines.ai_router import AIRouter
+from src.utils.phi_scrubber import PHIScrubber
 from src.utils.metrics import (
     MODEL_INFERENCE_DURATION,
     TRIAGE_CONFIDENCE,
@@ -800,8 +800,14 @@ class TriageEngine:
         # Step 3: Context enrichment
         context = await self.enrich_context(input_data.patient_id)
 
-        # Step 4: Build prompt
+        # Step 4: Build prompt with PHI scrubbing
+        phi_scrubber = PHIScrubber()
+        scrubbed_patient_id = phi_scrubber.scrub_patient_id(input_data.patient_id)
         messages = self.build_prompt(input_data, context)
+        # Scrub PHI from all message content before sending to LLM
+        for msg in messages:
+            if msg.get("role") == "user":
+                msg["content"] = phi_scrubber.scrub_text(msg["content"])
 
         # Step 5: LLM inference
         try:

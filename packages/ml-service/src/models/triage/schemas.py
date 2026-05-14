@@ -6,7 +6,7 @@ types package to ensure consistent data contracts across services.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Any
 
@@ -54,6 +54,30 @@ class Symptom(BaseModel):
     body_region: str | None = Field(None, max_length=100)
 
 
+class SeverityScale(int):
+    """Severity scale reported by the patient (1-5)."""
+
+    pass
+
+
+class PatientDemographic(BaseModel):
+    """Patient demographic information (mirrors TypeScript PatientDemographic)."""
+
+    age: int = Field(..., ge=0, le=150)
+    sex: str = Field(..., pattern=r"^(male|female|other)$")
+    pregnancy_status: bool | None = None
+    bmi: float | None = None
+
+
+class PatientLocation(BaseModel):
+    """Geographic location for a patient (mirrors TypeScript PatientLocation)."""
+
+    region: str = Field(..., min_length=1, max_length=100)
+    city: str = Field(..., min_length=1, max_length=100)
+    district: str | None = None
+    coordinates: dict[str, float] | None = None
+
+
 class TriageInput(BaseModel):
     """Input payload for a single triage request.
 
@@ -61,15 +85,21 @@ class TriageInput(BaseModel):
     """
 
     patient_id: str = Field(..., min_length=1, max_length=64)
-    symptoms: list[Symptom] = Field(..., min_length=1, max_length=20)
+    symptom_description: str = Field(default="", max_length=5000, description="Free-text symptom description.")
+    symptom_duration_hours: float | None = Field(None, ge=0, description="Duration of symptoms in hours.")
+    severity_scale: int | None = Field(None, ge=1, le=5, description="Patient-reported severity (1-5).")
+    symptoms: list[Symptom] = Field(default_factory=list, max_length=20)
     vital_signs: VitalSigns | None = None
     language: Language = Language.EN
     age_years: int | None = Field(None, ge=0, le=150)
     sex: str | None = Field(None, pattern=r"^(male|female|other)$")
     pregnant: bool | None = None
+    historical_conditions: list[str] = Field(default_factory=list, description="Historical/chronic conditions.")
     chronic_conditions: list[str] = Field(default_factory=list)
     current_medications: list[str] = Field(default_factory=list)
     allergies: list[str] = Field(default_factory=list)
+    demographic: PatientDemographic | None = Field(None, description="Patient demographics.")
+    location: PatientLocation | None = Field(None, description="Patient location.")
     region: str | None = Field(None, max_length=100, description="Geographic region for endemic disease context.")
     request_id: str | None = Field(None, max_length=128)
 
@@ -111,6 +141,16 @@ class DifferentialDiagnosis(BaseModel):
     reasoning: str = Field(..., max_length=2000)
 
 
+class UrgencyLevel(StrEnum):
+    """Urgency level aligned with Manchester Triage System (mirrors TypeScript)."""
+
+    LOW = "low"
+    MODERATE = "moderate"
+    HIGH = "high"
+    CRITICAL = "critical"
+    EMERGENCY = "emergency"
+
+
 class RecommendedAction(BaseModel):
     """Actionable next step for the patient or provider."""
 
@@ -118,6 +158,22 @@ class RecommendedAction(BaseModel):
     urgency: TriageSeverity
     timeframe_hours: float | None = Field(None, ge=0)
     facility_type: str | None = Field(None, description="e.g. 'emergency_department', 'primary_care'.")
+
+
+class SpecialtyRecommendation(BaseModel):
+    """A single specialty recommendation (mirrors TypeScript)."""
+
+    specialty: str
+    confidence_score: float = Field(..., ge=0.0, le=1.0)
+    rationale: str
+    estimated_wait_time_minutes: float = Field(default=0, ge=0)
+
+
+class FollowUpProtocol(BaseModel):
+    """Follow-up protocol attached to every triage result (mirrors TypeScript)."""
+
+    timeframe_hours: float = Field(..., ge=0)
+    escalation_triggers: list[str] = Field(default_factory=list)
 
 
 class TriageOutput(BaseModel):
@@ -129,14 +185,20 @@ class TriageOutput(BaseModel):
     request_id: str | None = None
     patient_id: str
     severity: TriageSeverity
+    urgency_level: UrgencyLevel | None = Field(None, description="Manchester Triage urgency level.")
     confidence: float = Field(..., ge=0.0, le=1.0)
+    confidence_score: float | None = Field(None, ge=0.0, le=1.0, description="Alias for confidence (TypeScript compat).")
     red_flags: list[RedFlag] = Field(default_factory=list)
     differential_diagnoses: list[DifferentialDiagnosis] = Field(default_factory=list)
+    recommended_specializations: list[SpecialtyRecommendation] = Field(default_factory=list)
+    suggested_diagnostics: list[str] = Field(default_factory=list)
+    contraindications: list[str] = Field(default_factory=list)
+    follow_up_protocol: FollowUpProtocol | None = None
     recommended_actions: list[RecommendedAction] = Field(default_factory=list)
     reasoning_summary: str = Field(..., max_length=5000)
     model_used: str = Field(..., description="Model identifier used for inference.")
     processing_time_ms: float = Field(..., ge=0)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")

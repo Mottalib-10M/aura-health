@@ -11,7 +11,7 @@ import hashlib
 import io
 import re
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any
 
 import httpx
@@ -620,7 +620,7 @@ class CredentialingPipeline:
                         record_found=result.get("found", False),
                         record_matches=result.get("found", False) and len(discrepancies) == 0,
                         discrepancies=discrepancies,
-                        checked_at=datetime.utcnow(),
+                        checked_at=datetime.now(timezone.utc),
                     )
                 else:
                     return AuthorityVerification(
@@ -629,7 +629,7 @@ class CredentialingPipeline:
                         record_found=False,
                         record_matches=False,
                         discrepancies=[f"Registry returned HTTP {response.status_code}."],
-                        checked_at=datetime.utcnow(),
+                        checked_at=datetime.now(timezone.utc),
                     )
 
         except Exception as exc:

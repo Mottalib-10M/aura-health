@@ -24,26 +24,16 @@ import type { VitalSigns } from '@aura/shared/types/patient';
 // Types
 // ---------------------------------------------------------------------------
 
+export type { FollowUpQuestion, FollowUpAnswer } from '../types';
+
+import type { FollowUpQuestion, FollowUpAnswer } from '../types';
+
 export type TriageStep =
   | 'symptoms'
   | 'follow_up'
   | 'vitals'
   | 'analyzing'
   | 'results';
-
-export interface FollowUpQuestion {
-  id: string;
-  text: string;
-  type: 'radio' | 'checkbox' | 'slider' | 'text';
-  options?: { label: string; value: string }[];
-  sliderConfig?: { min: number; max: number; step: number; unit: string };
-  required: boolean;
-}
-
-export interface FollowUpAnswer {
-  questionId: string;
-  value: string | string[] | number;
-}
 
 interface UseTriageReturn {
   /** Current step in the triage flow */

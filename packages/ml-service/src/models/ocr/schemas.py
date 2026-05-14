@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from enum import StrEnum
 from typing import Any
 
@@ -127,7 +127,7 @@ class CredentialResult(BaseModel):
     review_notes: list[str] = Field(default_factory=list)
     model_used: str
     processing_time_ms: float
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @model_validator(mode="after")
     def set_status_from_analysis(self) -> CredentialResult:

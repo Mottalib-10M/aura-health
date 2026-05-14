@@ -30,6 +30,7 @@ from src.models.longitudinal.schemas import (
 )
 from src.pipelines.ai_router import AIRouter
 from src.utils.metrics import MODEL_INFERENCE_DURATION
+from src.utils.phi_scrubber import PHIScrubber
 
 logger = structlog.get_logger(__name__)
 
@@ -617,6 +618,13 @@ class LongitudinalAnalyzer:
 
         alert_summary_parts = [f"- [{a.severity}] {a.title}" for a in alerts]
 
+        trends_text = "\n".join(trend_summary_parts)
+        alerts_text = "\n".join(alert_summary_parts) or "None"
+
+        # Scrub PHI before sending to LLM
+        phi_scrubber = PHIScrubber()
+        scrubbed_patient_id = phi_scrubber.scrub_patient_id(input_data.patient_id)
+
         prompt = [
             {
                 "role": "system",
@@ -629,12 +637,12 @@ class LongitudinalAnalyzer:
             {
                 "role": "user",
                 "content": (
-                    f"Patient ID: {input_data.patient_id}\n"
+                    f"Patient ID: {scrubbed_patient_id}\n"
                     f"Analysis window: {input_data.analysis_window_days} days\n"
                     f"Chronic conditions: {', '.join(input_data.chronic_conditions) or 'None'}\n"
                     f"Medications: {', '.join(input_data.medications) or 'None'}\n\n"
-                    f"Trends:\n{'chr(10)'.join(trend_summary_parts)}\n\n"
-                    f"Alerts ({len(alerts)}):\n{'chr(10)'.join(alert_summary_parts) or 'None'}"
+                    f"Trends:\n{trends_text}\n\n"
+                    f"Alerts ({len(alerts)}):\n{alerts_text}"
                 ),
             },
         ]

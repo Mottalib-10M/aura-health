@@ -8,6 +8,7 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.api.auth import require_auth
 from src.models.longitudinal.schemas import (
     AlertSeverity,
     HealthAlert,
@@ -19,7 +20,7 @@ from src.utils.metrics import REQUEST_COUNT, REQUEST_LATENCY
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/longitudinal", tags=["Longitudinal Analysis"])
+router = APIRouter(prefix="/longitudinal", tags=["Longitudinal Analysis"], dependencies=[Depends(require_auth)])
 
 
 def _get_analyzer() -> Any:

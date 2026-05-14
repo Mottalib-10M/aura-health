@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Any
 
@@ -43,11 +43,36 @@ class DataPoint(BaseModel):
     quality: float = Field(default=1.0, ge=0.0, le=1.0, description="Signal quality score.")
 
 
+class BiometricMetrics(BaseModel):
+    """Structured biometric data container (mirrors TypeScript BiometricMetrics)."""
+
+    heart_rate: list[DataPoint] = Field(default_factory=list)
+    blood_pressure_systolic: list[DataPoint] = Field(default_factory=list)
+    blood_pressure_diastolic: list[DataPoint] = Field(default_factory=list)
+    spo2: list[DataPoint] = Field(default_factory=list)
+    blood_glucose: list[DataPoint] = Field(default_factory=list)
+    temperature: list[DataPoint] = Field(default_factory=list)
+    respiratory_rate: list[DataPoint] = Field(default_factory=list)
+    steps: list[DataPoint] = Field(default_factory=list)
+    sleep_hours: list[DataPoint] = Field(default_factory=list)
+    weight_kg: list[DataPoint] = Field(default_factory=list)
+    hrv_ms: list[DataPoint] = Field(default_factory=list)
+
+    def to_flat_list(self) -> list[DataPoint]:
+        """Flatten all metric lists into a single sorted list."""
+        all_points: list[DataPoint] = []
+        for field_name in self.model_fields:
+            points = getattr(self, field_name)
+            if isinstance(points, list):
+                all_points.extend(points)
+        return sorted(all_points, key=lambda dp: dp.timestamp)
+
+
 class LongitudinalInput(BaseModel):
     """Input for longitudinal health analysis."""
 
     patient_id: str = Field(..., min_length=1, max_length=64)
-    metrics: list[DataPoint] = Field(..., min_length=1)
+    metrics: list[DataPoint] | BiometricMetrics = Field(..., min_length=1)
     analysis_window_days: int = Field(default=30, ge=1, le=365)
     include_forecasts: bool = Field(default=True)
     chronic_conditions: list[str] = Field(default_factory=list)
@@ -58,8 +83,10 @@ class LongitudinalInput(BaseModel):
 
     @field_validator("metrics")
     @classmethod
-    def sort_metrics_by_timestamp(cls, v: list[DataPoint]) -> list[DataPoint]:
+    def sort_metrics_by_timestamp(cls, v: list[DataPoint] | BiometricMetrics) -> list[DataPoint] | BiometricMetrics:
         """Ensure metrics are sorted chronologically."""
+        if isinstance(v, BiometricMetrics):
+            return v
         return sorted(v, key=lambda dp: dp.timestamp)
 
 
@@ -102,7 +129,29 @@ class HealthAlert(BaseModel):
     actual_value: float | None = None
     guideline_reference: str | None = Field(None, description="AHA, WHO, etc. guideline citation.")
     recommended_action: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Anomaly(BaseModel):
+    """Detected anomaly in a metric time-series (mirrors TypeScript)."""
+
+    metric: MetricType
+    timestamp: datetime
+    value: float
+    expected_range_low: float
+    expected_range_high: float
+    severity: AlertSeverity
+    description: str
+
+
+class RiskAssessment(BaseModel):
+    """Risk assessment for a health condition (mirrors TypeScript)."""
+
+    condition: str
+    risk_level: str = Field(..., description="'low', 'moderate', 'high', 'critical'.")
+    probability: float = Field(..., ge=0.0, le=1.0)
+    contributing_factors: list[str] = Field(default_factory=list)
+    recommended_actions: list[str] = Field(default_factory=list)
 
 
 class LongitudinalOutput(BaseModel):
@@ -112,13 +161,16 @@ class LongitudinalOutput(BaseModel):
     patient_id: str
     analysis_window_days: int
     trends: list[TrendResult] = Field(default_factory=list)
+    anomalies: list[Anomaly] = Field(default_factory=list, description="Detected anomalies.")
+    risk_assessments: list[RiskAssessment] = Field(default_factory=list, description="Risk assessments.")
     forecasts: dict[str, list[ForecastPoint]] = Field(default_factory=dict)
     alerts: list[HealthAlert] = Field(default_factory=list)
     overall_health_score: float | None = Field(None, ge=0.0, le=100.0)
+    confidence_score: float | None = Field(None, ge=0.0, le=1.0, description="Overall analysis confidence.")
     summary: str = Field(..., max_length=5000)
     model_used: str
     processing_time_ms: float
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

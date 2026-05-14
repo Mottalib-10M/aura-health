@@ -8,6 +8,7 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
+from src.api.auth import require_auth
 from src.models.ocr.schemas import (
     BatchCredentialInput,
     BatchCredentialResult,
@@ -21,7 +22,7 @@ from src.utils.metrics import REQUEST_COUNT, REQUEST_LATENCY
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/ocr", tags=["OCR / Credentialing"])
+router = APIRouter(prefix="/ocr", tags=["OCR / Credentialing"], dependencies=[Depends(require_auth)])
 
 # Maximum file size: 20 MB
 _MAX_FILE_SIZE = 20 * 1024 * 1024

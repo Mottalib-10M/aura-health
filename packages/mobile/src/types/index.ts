@@ -166,6 +166,26 @@ export interface AnalyticsEvent {
 }
 
 /**
+ * AI follow-up question returned by the triage API.
+ */
+export interface FollowUpQuestion {
+  id: string;
+  text: string;
+  type: 'radio' | 'checkbox' | 'slider' | 'text';
+  options?: { label: string; value: string }[];
+  sliderConfig?: { min: number; max: number; step: number; unit: string };
+  required: boolean;
+}
+
+/**
+ * Answer to a follow-up question submitted during triage.
+ */
+export interface FollowUpAnswer {
+  questionId: string;
+  value: string | string[] | number;
+}
+
+/**
  * Deep link route parameters.
  */
 export interface DeepLinkParams {

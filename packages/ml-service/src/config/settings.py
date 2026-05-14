@@ -59,6 +59,16 @@ class Settings(BaseSettings):
         description="API key for Anthropic models.",
     )
 
+    # -- Authentication ------------------------------------------------------------
+    JWT_SECRET: str = Field(
+        default="",
+        description="Secret key for JWT token verification.",
+    )
+    JWT_ALGORITHM: str = Field(
+        default="HS256",
+        description="Algorithm used for JWT encoding/decoding.",
+    )
+
     # -- Model Serving -------------------------------------------------------------
     MODEL_CACHE_DIR: str = Field(
         default="/tmp/aura-models",

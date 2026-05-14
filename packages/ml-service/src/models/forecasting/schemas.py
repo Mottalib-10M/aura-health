@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from enum import StrEnum
 from typing import Any
 
@@ -15,12 +15,18 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class AlertLevel(StrEnum):
-    """Outbreak alert levels based on sigma thresholds."""
+    """Outbreak alert levels aligned with WHO IHR classifications (mirrors TypeScript)."""
 
     GREEN = "green"
     YELLOW = "yellow"
     ORANGE = "orange"
     RED = "red"
+    # TypeScript-compatible values
+    WATCH = "watch"
+    WARNING = "warning"
+    ALERT = "alert"
+    EMERGENCY = "emergency"
+    PANDEMIC = "pandemic"
 
 
 class DetectionMethod(StrEnum):
@@ -94,7 +100,7 @@ class OutbreakResult(BaseModel):
     recommended_actions: list[ResponseAction] = Field(default_factory=list)
     confidence: float = Field(..., ge=0.0, le=1.0)
     processing_time_ms: float
-    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -106,7 +112,7 @@ class SurveillanceSummary(BaseModel):
     diseases_monitored: list[str] = Field(default_factory=list)
     total_cases_7d: int = 0
     total_cases_30d: int = 0
-    last_updated: datetime = Field(default_factory=datetime.utcnow)
+    last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # ---------------------------------------------------------------------------
@@ -196,5 +202,5 @@ class SupplyForecast(BaseModel):
     risk: StockoutRisk
     recommendations: list[OrderRecommendation] = Field(default_factory=list)
     processing_time_ms: float
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict[str, Any] = Field(default_factory=dict)

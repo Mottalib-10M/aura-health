@@ -16,6 +16,8 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { useAuthStore } from './src/stores/authStore';
+import { notificationService } from './src/services/notifications';
+import { offlineService } from './src/services/offline';
 import { Colors } from './src/utils/formatters';
 
 // Prevent auto-hide so we control when splash goes away
@@ -66,13 +68,11 @@ const linking = {
           TriageTab: {
             screens: {
               Triage: 'triage',
-              TriageResults: 'triage/results/:sessionId',
             },
           },
           AppointmentsTab: {
             screens: {
               Appointments: 'appointments',
-              AppointmentDetail: 'appointments/:appointmentId',
             },
           },
           HealthTab: {
@@ -111,6 +111,21 @@ export default function App() {
 
     prepare();
   }, [restoreSession]);
+
+  // Initialize core services on mount
+  useEffect(() => {
+    notificationService.initialize().catch((err) => {
+      console.warn('Notification service initialization failed:', err);
+    });
+    offlineService.initialize().catch((err) => {
+      console.warn('Offline service initialization failed:', err);
+    });
+
+    return () => {
+      notificationService.destroy();
+      offlineService.destroy();
+    };
+  }, []);
 
   const onLayoutRootView = useCallback(async () => {
     if (isReady) {

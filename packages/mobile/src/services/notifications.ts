@@ -152,7 +152,7 @@ class NotificationService {
   private async registerTokenWithBackend(token: string): Promise<void> {
     try {
       // Best-effort registration - failure is non-fatal
-      await apiClient.syncWearableData(token); // Placeholder - would be registerPushToken
+      await apiClient.registerPushToken(token);
     } catch {
       console.warn('Failed to register push token with backend.');
     }

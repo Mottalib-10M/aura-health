@@ -6,13 +6,14 @@
  * offline request queuing, and standardized error handling.
  */
 
+import { Platform } from 'react-native';
 import { GraphQLClient, gql } from 'graphql-request';
 import * as SecureStore from 'expo-secure-store';
 import type { LoginRequest, LoginResponse, AuthTokenPair } from '@aura/shared/types/auth';
 import type { TriageSession } from '@aura/shared/types/triage';
 import type { VitalSigns } from '@aura/shared/types/patient';
 import type { Appointment, AppointmentSummary } from '@aura/shared/types/appointment';
-import type { FollowUpQuestion, FollowUpAnswer } from '../hooks/useTriage';
+import type { FollowUpQuestion, FollowUpAnswer } from '../types';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -481,6 +482,17 @@ export const apiClient = {
       client.request(
         gql`mutation SyncWearable($deviceId: ID!) { syncWearableData(deviceId: $deviceId) { success } }`,
         { deviceId }
+      )
+    );
+  },
+
+  // -- Push Notifications ---------------------------------------------------
+
+  async registerPushToken(token: string): Promise<void> {
+    await authenticatedRequest((client) =>
+      client.request(
+        gql`mutation RegisterPushToken($token: String!, $platform: String!) { registerPushToken(token: $token, platform: $platform) { success } }`,
+        { token, platform: Platform.OS }
       )
     );
   },

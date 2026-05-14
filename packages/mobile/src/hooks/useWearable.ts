@@ -15,6 +15,19 @@ import { apiClient } from '../services/api';
 import type { WearableDevice, ConnectionStatus } from '../components/wearable/WearableSync';
 
 // ---------------------------------------------------------------------------
+// Base64 Decode Helper (Buffer is not available in React Native)
+// ---------------------------------------------------------------------------
+
+function base64ToUint8Array(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -227,7 +240,7 @@ export function useWearable(): UseWearableReturn {
             '00002a19-0000-1000-8000-00805f9b34fb'
           );
           if (batteryChar.value) {
-            const batteryLevel = Buffer.from(batteryChar.value, 'base64')[0];
+            const batteryLevel = base64ToUint8Array(batteryChar.value)[0];
             setDevices((prev) =>
               prev.map((d) =>
                 d.id === deviceId ? { ...d, batteryLevel } : d
@@ -306,7 +319,7 @@ export function useWearable(): UseWearableReturn {
             '00002a37-0000-1000-8000-00805f9b34fb'
           );
           if (hrChar.value) {
-            const hrData = Buffer.from(hrChar.value, 'base64');
+            const hrData = base64ToUint8Array(hrChar.value);
             const heartRate = hrData[1]; // Simplified parsing
             addVitals({
               heart_rate_bpm: heartRate,
@@ -326,7 +339,7 @@ export function useWearable(): UseWearableReturn {
             '00002a5e-0000-1000-8000-00805f9b34fb'
           );
           if (spo2Char.value) {
-            const spo2Data = Buffer.from(spo2Char.value, 'base64');
+            const spo2Data = base64ToUint8Array(spo2Char.value);
             addVitals({
               spO2_percent: spo2Data[1],
               recorded_at: new Date().toISOString(),

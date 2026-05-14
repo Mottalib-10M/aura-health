@@ -97,8 +97,9 @@ class SupplyForecaster:
         for d in demands:
             forecast_val = level + trend
             fitted.append(forecast_val)
+            prev_level = level
             level = alpha * d + (1 - alpha) * (level + trend)
-            trend = beta * (level - (level - trend)) + (1 - beta) * trend
+            trend = beta * (level - prev_level) + (1 - beta) * trend
 
         # Calculate MAPE on last 20% of data
         val_size = max(3, len(demands) // 5)

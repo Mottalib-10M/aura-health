@@ -21,12 +21,15 @@ import {
   Alert,
   SafeAreaView,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
 import { useAuthStore } from '../../stores/authStore';
 import { useHealthStore } from '../../stores/healthStore';
+import type { ProfileStackParamList } from '../../navigation/types';
 import {
   Colors,
   Spacing,
@@ -92,6 +95,7 @@ function SectionHeader({ title }: { title: string }) {
 // ---------------------------------------------------------------------------
 
 export function ProfileScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const { logout, isLoading } = useAuth();
   const { user, language, biometricEnabled, setBiometricEnabled } = useAuthStore();
   const { connectedDevices } = useHealthStore();
@@ -145,7 +149,7 @@ export function ProfileScreen() {
               style={styles.avatarEditButton}
               accessibilityRole="button"
               accessibilityLabel="Change profile photo"
-              onPress={() => {}}
+              onPress={() => Alert.alert('Coming Soon', 'Profile photo editing is under development.')}
             >
               <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
                 <Path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke={Colors.white} strokeWidth={2} />
@@ -169,7 +173,7 @@ export function ProfileScreen() {
             }
             title="Edit Profile"
             subtitle="Name, date of birth, contact info"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('EditProfile')}
           />
         </Card>
 
@@ -186,7 +190,7 @@ export function ProfileScreen() {
             }
             title="Medical History"
             subtitle="Conditions, allergies, medications"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('MedicalHistory')}
           />
           <View style={styles.divider} />
           <SettingsRow
@@ -198,7 +202,7 @@ export function ProfileScreen() {
             }
             title="Prescription History"
             subtitle="Past and active prescriptions"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('PrescriptionHistory')}
           />
           <View style={styles.divider} />
           <SettingsRow
@@ -210,7 +214,7 @@ export function ProfileScreen() {
             }
             title="Connected Devices"
             subtitle={`${connectedDevices.length} device${connectedDevices.length !== 1 ? 's' : ''} connected`}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('ConnectedDevices')}
           />
         </Card>
 
@@ -226,7 +230,7 @@ export function ProfileScreen() {
             }
             title="Notifications"
             subtitle="Push notification preferences"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('NotificationSettings')}
           />
           <View style={styles.divider} />
           <SettingsRow
@@ -238,7 +242,7 @@ export function ProfileScreen() {
             }
             title="Language"
             subtitle={selectedLanguage.nativeName}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('LanguageSettings')}
           />
           <View style={styles.divider} />
           <SettingsRow
@@ -277,7 +281,7 @@ export function ProfileScreen() {
             }
             title="Data Sharing"
             subtitle="Control who sees your health data"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('DataSharingSettings')}
           />
         </Card>
 
@@ -293,7 +297,7 @@ export function ProfileScreen() {
             }
             title="About Aura Health"
             subtitle="Version 1.0.0"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('About')}
           />
         </Card>
 
