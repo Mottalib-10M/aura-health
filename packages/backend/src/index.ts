@@ -20,7 +20,7 @@ import { mutationResolvers } from './graphql/mutations/index.js';
 // ---------------------------------------------------------------------------
 // GraphQL context
 // ---------------------------------------------------------------------------
-export interface AuraContext {
+export interface UzavitaContext {
   user?: AuthenticatedUser;
 }
 
@@ -35,7 +35,7 @@ async function bootstrap(): Promise<void> {
   });
 
   // 2. Create Apollo Server 4
-  const apollo = new ApolloServer<AuraContext>({
+  const apollo = new ApolloServer<UzavitaContext>({
     schema,
     introspection: config.server.isDev,
     formatError: (formattedError) => {
@@ -90,9 +90,9 @@ async function bootstrap(): Promise<void> {
       origin: config.server.isDev
         ? '*'
         : [
-            'https://app.aurahealth.uz',
-            'https://admin.aurahealth.uz',
-            /\.aurahealth\.uz$/,
+            'https://app.uzavita.com',
+            'https://admin.uzavita.com',
+            /\.uzavita\.com$/,
           ],
       credentials: true,
       methods: ['GET', 'POST', 'OPTIONS'],
@@ -197,7 +197,7 @@ async function bootstrap(): Promise<void> {
     '/graphql',
     graphqlRateLimiter,
     expressMiddleware(apollo, {
-      context: async ({ req }): Promise<AuraContext> => {
+      context: async ({ req }): Promise<UzavitaContext> => {
         return {
           user: req.user,
         };
@@ -234,7 +234,7 @@ async function bootstrap(): Promise<void> {
         graphql: `http://localhost:${config.server.port}/graphql`,
         health: `http://localhost:${config.server.port}/health`,
       },
-      'Aura Health backend started',
+      'Uzavita backend started',
     );
   });
 
@@ -277,6 +277,6 @@ async function bootstrap(): Promise<void> {
 // Run
 // ---------------------------------------------------------------------------
 bootstrap().catch((err) => {
-  logger.fatal({ err }, 'Failed to start Aura Health backend');
+  logger.fatal({ err }, 'Failed to start Uzavita backend');
   process.exit(1);
 });

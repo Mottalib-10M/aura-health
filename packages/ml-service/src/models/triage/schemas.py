@@ -1,6 +1,6 @@
 """Pydantic v2 schemas for the Symptom Triage pipeline.
 
-These schemas mirror the TypeScript interfaces defined in the Aura Health shared
+These schemas mirror the TypeScript interfaces defined in the Uzavita shared
 types package to ensure consistent data contracts across services.
 """
 
@@ -81,7 +81,7 @@ class PatientLocation(BaseModel):
 class TriageInput(BaseModel):
     """Input payload for a single triage request.
 
-    Matches ``TriageInput`` from ``@aura/shared-types``.
+    Matches ``TriageInput`` from ``@uzavita/shared-types``.
     """
 
     patient_id: str = Field(..., min_length=1, max_length=64)
@@ -179,7 +179,7 @@ class FollowUpProtocol(BaseModel):
 class TriageOutput(BaseModel):
     """Output payload from the triage engine.
 
-    Matches ``TriageOutput`` from ``@aura/shared-types``.
+    Matches ``TriageOutput`` from ``@uzavita/shared-types``.
     """
 
     request_id: str | None = None

@@ -1,5 +1,5 @@
 import { format, formatDistanceToNow, parseISO, isValid } from 'date-fns';
-import type { UrgencyLevel } from '@aura/shared/types/triage';
+import type { UrgencyLevel } from '@uzavita/shared/types/triage';
 
 // ---------------------------------------------------------------------------
 // Date / Time Formatters

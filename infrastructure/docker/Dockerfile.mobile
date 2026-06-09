@@ -1,13 +1,13 @@
 ###############################################################################
-# Aura Health - Mobile (React Native / Expo) Build Environment
+# Uzavita - Mobile (React Native / Expo) Build Environment
 # Used for EAS Build or local development builds
 ###############################################################################
 
 FROM node:22-bookworm
 
 # Metadata
-LABEL maintainer="Aura Health Engineering <engineering@aurahealth.app>"
-LABEL description="React Native / Expo build environment for Aura Health mobile app"
+LABEL maintainer="Uzavita Engineering <engineering@uzavita.com>"
+LABEL description="React Native / Expo build environment for Uzavita mobile app"
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -77,11 +77,11 @@ COPY packages/mobile/ ./packages/mobile/
 RUN npm run build --workspace=packages/shared
 
 # Create non-root user
-RUN groupadd --system --gid 1001 aura && \
-    useradd --system --uid 1001 --gid aura --create-home aura && \
-    chown -R aura:aura /app
+RUN groupadd --system --gid 1001 uzavita && \
+    useradd --system --uid 1001 --gid uzavita --create-home uzavita && \
+    chown -R uzavita:uzavita /app
 
-USER aura
+USER uzavita
 
 # Expose Metro Bundler port
 EXPOSE 8081

@@ -42,7 +42,7 @@ logger = structlog.get_logger(__name__)
 # ---------------------------------------------------------------------------
 
 TRIAGE_SYSTEM_PROMPT = """\
-You are a clinical triage assistant for the Aura Health platform, serving healthcare
+You are a clinical triage assistant for the Uzavita platform, serving healthcare
 providers in Central Asia (Uzbekistan, Kyrgyzstan, Tajikistan) and surrounding regions.
 
 ## Role & Constraints

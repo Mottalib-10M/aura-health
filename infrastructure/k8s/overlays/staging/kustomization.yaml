@@ -1,11 +1,11 @@
 ###############################################################################
-# Aura Health - Staging Overlay
+# Uzavita - Staging Overlay
 # Moderate replicas and resources for staging/QA environment
 ###############################################################################
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: aura-health-staging
+namespace: uzavita-staging
 
 namePrefix: staging-
 
@@ -19,11 +19,11 @@ patches:
   # Create staging namespace
   - target:
       kind: Namespace
-      name: aura-health
+      name: uzavita
     patch: |
       - op: replace
         path: /metadata/name
-        value: aura-health-staging
+        value: uzavita-staging
 
   # Backend: 2 replicas
   - target:
@@ -121,26 +121,26 @@ patches:
   # Ingress: staging hostnames
   - target:
       kind: Ingress
-      name: aura-ingress
+      name: uzavita-ingress
     patch: |
       - op: replace
         path: /spec/rules/0/host
-        value: api.staging.aurahealth.app
+        value: api.staging.uzavita.app
       - op: replace
         path: /spec/rules/1/host
-        value: app.staging.aurahealth.app
+        value: app.staging.uzavita.app
       - op: replace
         path: /spec/rules/2/host
-        value: ml.staging.aurahealth.app
+        value: ml.staging.uzavita.app
       - op: replace
         path: /spec/tls/0/hosts
         value:
-          - api.staging.aurahealth.app
-          - app.staging.aurahealth.app
-          - ml.staging.aurahealth.app
+          - api.staging.uzavita.app
+          - app.staging.uzavita.app
+          - ml.staging.uzavita.app
       - op: replace
         path: /spec/tls/0/secretName
-        value: aura-staging-tls-cert
+        value: uzavita-staging-tls-cert
 
   # PostgreSQL: reduce storage for staging
   - target:
@@ -162,25 +162,25 @@ patches:
 
 # ConfigMap overrides for staging
 configMapGenerator:
-  - name: aura-config
+  - name: uzavita-config
     behavior: merge
     literals:
       - NODE_ENV=staging
       - LOG_LEVEL=info
       - GRAPHQL_PLAYGROUND=false
       - GRAPHQL_INTROSPECTION=true
-      - API_URL=https://api.staging.aurahealth.app
-      - APP_URL=https://app.staging.aurahealth.app
-      - CORS_ORIGINS=https://app.staging.aurahealth.app
+      - API_URL=https://api.staging.uzavita.app
+      - APP_URL=https://app.staging.uzavita.app
+      - CORS_ORIGINS=https://app.staging.uzavita.app
       - RATE_LIMIT_MAX=200
 
 images:
-  - name: aura-health/backend
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/backend
+  - name: uzavita/backend
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/backend
     newTag: staging-latest
-  - name: aura-health/web
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/web
+  - name: uzavita/web
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/web
     newTag: staging-latest
-  - name: aura-health/ml-service
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/ml-service
+  - name: uzavita/ml-service
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/ml-service
     newTag: staging-latest

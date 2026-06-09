@@ -116,10 +116,10 @@ export function RegisterPage() {
         {/* Logo */}
         <div className="mb-6 flex items-center justify-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600">
-            <span className="text-sm font-bold text-white">A</span>
+            <span className="text-sm font-bold text-white">U</span>
           </div>
           <span className="font-display text-xl font-bold text-slate-900 dark:text-white">
-            Aura Health
+            Uzavita
           </span>
         </div>
 
@@ -189,7 +189,7 @@ export function RegisterPage() {
                     Choose your role
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    Select how you will use Aura Health
+                    Select how you will use Uzavita
                   </p>
                 </div>
 

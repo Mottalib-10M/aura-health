@@ -272,7 +272,7 @@ export function DevicesPage() {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         title="Add a Device"
-        description="Select the device you want to connect to Aura Health"
+        description="Select the device you want to connect to Uzavita"
         size="lg"
       >
         <div className="grid gap-3 sm:grid-cols-2">

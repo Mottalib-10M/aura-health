@@ -1,5 +1,5 @@
 -- ============================================================================
--- Aura Health Platform — Initial Database Schema
+-- Uzavita Platform — Initial Database Schema
 -- PostgreSQL 16+ with TimescaleDB extension
 -- ============================================================================
 

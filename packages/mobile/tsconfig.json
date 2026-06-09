@@ -19,7 +19,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@aura/shared/*": ["../shared/src/*"]
+      "@uzavita/shared/*": ["../shared/src/*"]
     },
     "types": ["jest", "@testing-library/jest-native"]
   },

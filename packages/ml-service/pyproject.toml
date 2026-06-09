@@ -3,14 +3,14 @@ requires = ["setuptools>=75.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aura-ml-service"
+name = "uzavita-ml-service"
 version = "1.0.0"
-description = "Aura Health AI/ML Model Serving Service"
+description = "Uzavita AI/ML Model Serving Service"
 readme = "README.md"
 license = {text = "PROPRIETARY"}
 requires-python = ">=3.11"
 authors = [
-    {name = "Aura Health Engineering", email = "engineering@aurahealth.dev"},
+    {name = "Uzavita Engineering", email = "engineering@uzavita.com"},
 ]
 keywords = ["health", "ml", "ai", "triage", "forecasting"]
 classifiers = [

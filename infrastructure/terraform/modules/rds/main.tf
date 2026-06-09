@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - RDS PostgreSQL Module
+# Uzavita - RDS PostgreSQL Module
 # Multi-AZ deployment with TimescaleDB, encryption, automated backups
 ###############################################################################
 
@@ -74,13 +74,13 @@ variable "engine_version" {
 variable "database_name" {
   description = "Name of the default database"
   type        = string
-  default     = "aura_health"
+  default     = "uzavita"
 }
 
 variable "master_username" {
   description = "Master username for the database"
   type        = string
-  default     = "aura_admin"
+  default     = "uzavita_admin"
 }
 
 variable "multi_az" {
@@ -118,7 +118,7 @@ variable "tags" {
 # =============================================================================
 locals {
   common_tags = merge(var.tags, {
-    Project     = "aura-health"
+    Project     = "uzavita"
     Environment = var.environment
     ManagedBy   = "terraform"
     Component   = "database"

@@ -1,15 +1,15 @@
 ###############################################################################
-# Aura Health - Redis Cluster Deployment
+# Uzavita - Redis Cluster Deployment
 ###############################################################################
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: redis
     app.kubernetes.io/component: cache
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   replicas: 3
   selector:
@@ -21,7 +21,7 @@ spec:
       labels:
         app.kubernetes.io/name: redis
         app.kubernetes.io/component: cache
-        app.kubernetes.io/part-of: aura-health
+        app.kubernetes.io/part-of: uzavita
     spec:
       securityContext:
         runAsNonRoot: true
@@ -70,7 +70,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: aura-secrets
+                  name: uzavita-secrets
                   key: REDIS_PASSWORD
           resources:
             requests:
@@ -109,11 +109,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: redis
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: redis
     app.kubernetes.io/component: cache
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   ports:

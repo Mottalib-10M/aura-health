@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { gqlRequest } from '@/services/api';
 import { GET_PATIENT_VITALS } from '@/services/graphql/queries';
-import type { TimeSeriesDataPoint, BiometricMetrics } from '@aura/shared/types/telemetry';
+import type { TimeSeriesDataPoint, BiometricMetrics } from '@uzavita/shared/types/telemetry';
 
 // ---------------------------------------------------------------------------
 // Types

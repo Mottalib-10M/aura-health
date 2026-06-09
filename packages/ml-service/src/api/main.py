@@ -1,4 +1,4 @@
-"""FastAPI application entry point for the Aura Health ML Service."""
+"""FastAPI application entry point for the Uzavita ML Service."""
 
 from __future__ import annotations
 
@@ -144,9 +144,9 @@ def create_app() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
-        title="Aura Health ML Service",
+        title="Uzavita ML Service",
         description=(
-            "AI/ML model serving for the Aura Health platform. "
+            "AI/ML model serving for the Uzavita platform. "
             "Provides symptom triage, longitudinal health analysis, "
             "credential verification, and epidemiological forecasting."
         ),

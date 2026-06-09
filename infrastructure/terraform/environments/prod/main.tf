@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - Production Environment
+# Uzavita - Production Environment
 # Production-grade instance sizes, full HA, encryption, monitoring
 ###############################################################################
 
@@ -14,11 +14,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "aura-health-terraform-state"
+    bucket         = "uzavita-terraform-state"
     key            = "environments/prod/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "aura-health-terraform-locks"
+    dynamodb_table = "uzavita-terraform-locks"
   }
 }
 
@@ -30,7 +30,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "aura-health"
+      Project     = "uzavita"
       Environment = "production"
       ManagedBy   = "terraform"
       HIPAA       = "true"
@@ -53,7 +53,7 @@ variable "aws_region" {
 module "eks" {
   source = "../../modules/eks"
 
-  cluster_name        = "aura-health-production"
+  cluster_name        = "uzavita-production"
   environment         = "production"
   aws_region          = var.aws_region
   vpc_cidr            = "10.1.0.0/16"
@@ -84,7 +84,7 @@ module "eks" {
 module "rds" {
   source = "../../modules/rds"
 
-  identifier         = "aura-health-prod"
+  identifier         = "uzavita-prod"
   environment        = "production"
   vpc_id             = module.eks.vpc_id
   private_subnet_ids = module.eks.private_subnet_ids
@@ -96,8 +96,8 @@ module "rds" {
   allocated_storage     = 200
   max_allocated_storage = 1000
   engine_version        = "16.3"
-  database_name         = "aura_health"
-  master_username       = "aura_admin"
+  database_name         = "uzavita"
+  master_username       = "uzavita_admin"
 
   # Multi-AZ for production HA
   multi_az = true
@@ -125,7 +125,7 @@ module "rds" {
 module "elasticache" {
   source = "../../modules/elasticache"
 
-  cluster_id         = "aura-health-prod"
+  cluster_id         = "uzavita-prod"
   environment        = "production"
   vpc_id             = module.eks.vpc_id
   private_subnet_ids = module.eks.private_subnet_ids
@@ -158,7 +158,7 @@ module "elasticache" {
 # ECR Repositories
 # =============================================================================
 resource "aws_ecr_repository" "backend" {
-  name                 = "aura-health/backend"
+  name                 = "uzavita/backend"
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
@@ -171,7 +171,7 @@ resource "aws_ecr_repository" "backend" {
 }
 
 resource "aws_ecr_repository" "web" {
-  name                 = "aura-health/web"
+  name                 = "uzavita/web"
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
@@ -184,7 +184,7 @@ resource "aws_ecr_repository" "web" {
 }
 
 resource "aws_ecr_repository" "ml_service" {
-  name                 = "aura-health/ml-service"
+  name                 = "uzavita/ml-service"
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
@@ -198,7 +198,7 @@ resource "aws_ecr_repository" "ml_service" {
 
 # Lifecycle policy for ECR - keep last 50 images in production
 resource "aws_ecr_lifecycle_policy" "cleanup" {
-  for_each   = toset(["aura-health/backend", "aura-health/web", "aura-health/ml-service"])
+  for_each   = toset(["uzavita/backend", "uzavita/web", "uzavita/ml-service"])
   repository = each.key
 
   policy = jsonencode({
@@ -229,7 +229,7 @@ resource "aws_ecr_lifecycle_policy" "cleanup" {
 # S3 Bucket for application data (PHI-compliant)
 # =============================================================================
 resource "aws_s3_bucket" "app_data" {
-  bucket = "aura-health-production-data"
+  bucket = "uzavita-production-data"
 
   tags = {
     DataClass  = "PHI"
@@ -273,7 +273,7 @@ resource "aws_s3_bucket_logging" "app_data" {
 }
 
 resource "aws_s3_bucket" "access_logs" {
-  bucket = "aura-health-production-access-logs"
+  bucket = "uzavita-production-access-logs"
 
   tags = {
     Purpose = "access-logging"
@@ -300,7 +300,7 @@ resource "aws_kms_key" "s3" {
 }
 
 resource "aws_kms_alias" "s3" {
-  name          = "alias/aura-health-prod-s3"
+  name          = "alias/uzavita-prod-s3"
   target_key_id = aws_kms_key.s3.key_id
 }
 
@@ -308,12 +308,12 @@ resource "aws_kms_alias" "s3" {
 # CloudWatch Log Group for application logs
 # =============================================================================
 resource "aws_cloudwatch_log_group" "application" {
-  name              = "/aura-health/production"
+  name              = "/uzavita/production"
   retention_in_days = 365
   kms_key_id        = aws_kms_key.cloudwatch.arn
 
   tags = {
-    Application = "aura-health"
+    Application = "uzavita"
     Compliance  = "HIPAA"
   }
 }
@@ -360,8 +360,8 @@ data "aws_caller_identity" "current" {}
 # WAF (Web Application Firewall)
 # =============================================================================
 resource "aws_wafv2_web_acl" "main" {
-  name        = "aura-health-production-waf"
-  description = "WAF for Aura Health production environment"
+  name        = "uzavita-production-waf"
+  description = "WAF for Uzavita production environment"
   scope       = "REGIONAL"
 
   default_action {
@@ -439,7 +439,7 @@ resource "aws_wafv2_web_acl" "main" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "AuraHealthWAF"
+    metric_name                = "UzavitaWAF"
     sampled_requests_enabled   = true
   }
 

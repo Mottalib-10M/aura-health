@@ -1,15 +1,15 @@
 ###############################################################################
-# Aura Health - Backend API Service
+# Uzavita - Backend API Service
 ###############################################################################
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: backend
     app.kubernetes.io/component: api
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   ports:

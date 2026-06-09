@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - Kafka StatefulSet (3 Brokers)
+# Uzavita - Kafka StatefulSet (3 Brokers)
 ###############################################################################
 
 # ---------------------------------------------------------------------------
@@ -9,11 +9,11 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: zookeeper
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: zookeeper
     app.kubernetes.io/component: messaging
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   replicas: 1
   serviceName: zookeeper-headless
@@ -26,7 +26,7 @@ spec:
       labels:
         app.kubernetes.io/name: zookeeper
         app.kubernetes.io/component: messaging
-        app.kubernetes.io/part-of: aura-health
+        app.kubernetes.io/part-of: uzavita
     spec:
       terminationGracePeriodSeconds: 30
       containers:
@@ -83,10 +83,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: zookeeper-headless
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: zookeeper
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   clusterIP: None
@@ -108,10 +108,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: zookeeper
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: zookeeper
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   ports:
@@ -130,11 +130,11 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: kafka
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: kafka
     app.kubernetes.io/component: messaging
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   replicas: 3
   serviceName: kafka-headless
@@ -148,7 +148,7 @@ spec:
       labels:
         app.kubernetes.io/name: kafka
         app.kubernetes.io/component: messaging
-        app.kubernetes.io/part-of: aura-health
+        app.kubernetes.io/part-of: uzavita
     spec:
       terminationGracePeriodSeconds: 60
       affinity:
@@ -183,7 +183,7 @@ spec:
             - name: KAFKA_INTER_BROKER_LISTENER_NAME
               value: INTERNAL
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: INTERNAL://$(POD_NAME).kafka-headless.aura-health.svc.cluster.local:29092,EXTERNAL://$(POD_NAME).kafka-headless.aura-health.svc.cluster.local:9092
+              value: INTERNAL://$(POD_NAME).kafka-headless.uzavita.svc.cluster.local:29092,EXTERNAL://$(POD_NAME).kafka-headless.uzavita.svc.cluster.local:9092
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               value: "3"
             - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
@@ -250,10 +250,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kafka-headless
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: kafka
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   clusterIP: None
@@ -272,10 +272,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kafka
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: kafka
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   ports:

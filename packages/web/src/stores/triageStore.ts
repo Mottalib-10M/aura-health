@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { TriageOutput, SeverityScale } from '@aura/shared/types/triage';
-import type { VitalSigns } from '@aura/shared/types/patient';
+import type { TriageOutput, SeverityScale } from '@uzavita/shared/types/triage';
+import type { VitalSigns } from '@uzavita/shared/types/patient';
 
 // ---------------------------------------------------------------------------
 // Types

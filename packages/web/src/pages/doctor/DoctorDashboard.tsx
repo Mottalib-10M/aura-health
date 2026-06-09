@@ -17,7 +17,7 @@ import { VitalSparkline } from '@/components/charts/VitalSparkline';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { formatTime } from '@/utils/formatters';
-import type { TimeSeriesDataPoint } from '@aura/shared/types/telemetry';
+import type { TimeSeriesDataPoint } from '@uzavita/shared/types/telemetry';
 
 // ---------------------------------------------------------------------------
 // Mock data

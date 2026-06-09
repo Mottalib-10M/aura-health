@@ -1,15 +1,15 @@
 ###############################################################################
-# Aura Health - Web Frontend Service
+# Uzavita - Web Frontend Service
 ###############################################################################
 apiVersion: v1
 kind: Service
 metadata:
   name: web
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: web
     app.kubernetes.io/component: frontend
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   ports:

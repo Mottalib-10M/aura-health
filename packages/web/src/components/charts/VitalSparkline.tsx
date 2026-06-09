@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import type { TimeSeriesDataPoint } from '@aura/shared/types/telemetry';
+import type { TimeSeriesDataPoint } from '@uzavita/shared/types/telemetry';
 
 // ---------------------------------------------------------------------------
 // Types

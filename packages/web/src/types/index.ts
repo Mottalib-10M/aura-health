@@ -17,7 +17,7 @@ export type {
   Patient,
   PatientSummary,
   PatientSearchParams,
-} from '@aura/shared/types/patient';
+} from '@uzavita/shared/types/patient';
 
 export type {
   DoctorId,
@@ -29,7 +29,7 @@ export type {
   Doctor,
   DoctorSummary,
   DoctorSearchParams,
-} from '@aura/shared/types/doctor';
+} from '@uzavita/shared/types/doctor';
 
 export type {
   UrgencyLevel,
@@ -42,7 +42,7 @@ export type {
   TriageSession,
   TriageHistoryParams,
   TriageStatistics,
-} from '@aura/shared/types/triage';
+} from '@uzavita/shared/types/triage';
 
 export type {
   TimeSeriesDataPoint,
@@ -56,7 +56,7 @@ export type {
   LongitudinalOutput,
   LongitudinalReport,
   DeviceRegistration,
-} from '@aura/shared/types/telemetry';
+} from '@uzavita/shared/types/telemetry';
 
 export type {
   AppointmentId,
@@ -71,7 +71,7 @@ export type {
   CreateAppointmentRequest,
   RescheduleAppointmentRequest,
   AppointmentSearchParams,
-} from '@aura/shared/types/appointment';
+} from '@uzavita/shared/types/appointment';
 
 export type {
   InstitutionId,
@@ -85,7 +85,7 @@ export type {
   Institution,
   InstitutionSummary,
   InstitutionSearchParams,
-} from '@aura/shared/types/institution';
+} from '@uzavita/shared/types/institution';
 
 export type {
   OutbreakAlertLevel,
@@ -100,7 +100,7 @@ export type {
   RegionalSupplyStatus,
   OutbreakSearchParams,
   SupplyForecastParams,
-} from '@aura/shared/types/surveillance';
+} from '@uzavita/shared/types/surveillance';
 
 // ---------------------------------------------------------------------------
 // Web-specific UI types

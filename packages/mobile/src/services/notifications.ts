@@ -95,7 +95,7 @@ class NotificationService {
 
   /**
    * Requests push notification permissions and registers the device
-   * token with the Aura Health backend.
+   * token with the Uzavita backend.
    */
   async registerForPushNotifications(): Promise<string | null> {
     if (!Device.isDevice) {
@@ -130,7 +130,7 @@ class NotificationService {
     try {
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
       const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: projectId || 'aura-health-mobile',
+        projectId: projectId || 'uzavita-mobile',
       });
 
       this.pushToken = tokenData.data;

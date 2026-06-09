@@ -102,7 +102,7 @@ class OfflineService {
    * Initializes the SQLite database and sets up connectivity listeners.
    */
   async initialize(): Promise<void> {
-    this.db = await SQLite.openDatabaseAsync('aura_offline.db');
+    this.db = await SQLite.openDatabaseAsync('uzavita_offline.db');
 
     // Create tables
     await this.db.execAsync(CREATE_TABLE_SQL);

@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - Web Frontend (Multi-stage build)
+# Uzavita - Web Frontend (Multi-stage build)
 # Vite + React -> nginx:alpine
 ###############################################################################
 
@@ -41,13 +41,13 @@ COPY infrastructure/docker/nginx.conf /etc/nginx/nginx.conf
 COPY --from=builder /app/packages/web/dist /usr/share/nginx/html
 
 # Create non-root user for nginx
-RUN addgroup --system --gid 1001 aura && \
-    adduser --system --uid 1001 --ingroup aura aura && \
-    chown -R aura:aura /usr/share/nginx/html && \
-    chown -R aura:aura /var/cache/nginx && \
-    chown -R aura:aura /var/log/nginx && \
+RUN addgroup --system --gid 1001 uzavita && \
+    adduser --system --uid 1001 --ingroup uzavita uzavita && \
+    chown -R uzavita:uzavita /usr/share/nginx/html && \
+    chown -R uzavita:uzavita /var/cache/nginx && \
+    chown -R uzavita:uzavita /var/log/nginx && \
     touch /var/run/nginx.pid && \
-    chown -R aura:aura /var/run/nginx.pid
+    chown -R uzavita:uzavita /var/run/nginx.pid
 
 # Expose HTTP port
 EXPOSE 80

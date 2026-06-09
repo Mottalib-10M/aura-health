@@ -8,13 +8,13 @@
  */
 
 import { create } from 'zustand';
-import type { VitalSigns } from '@aura/shared/types/patient';
+import type { VitalSigns } from '@uzavita/shared/types/patient';
 import type {
   TimeSeriesDataPoint,
   BiometricAnomaly,
   HealthRiskAssessment,
   DeviceSource,
-} from '@aura/shared/types/telemetry';
+} from '@uzavita/shared/types/telemetry';
 
 // ---------------------------------------------------------------------------
 // Types

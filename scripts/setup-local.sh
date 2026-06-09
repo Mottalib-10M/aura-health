@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###############################################################################
-# Aura Health - Local Development Setup Script
+# Uzavita - Local Development Setup Script
 #
 # Sets up the complete local development environment:
 #   1. Checks prerequisites (node, npm, docker, python)
@@ -127,7 +127,7 @@ wait_for_service() {
 main() {
   echo ""
   echo "======================================================================"
-  echo "  Aura Health - Local Development Setup"
+  echo "  Uzavita - Local Development Setup"
   echo "======================================================================"
   echo ""
 
@@ -247,7 +247,7 @@ main() {
       log_success "Created .env from .env.example"
     else
       cat > .env << 'ENVEOF'
-# Aura Health - Root Environment Variables
+# Uzavita - Root Environment Variables
 NODE_ENV=development
 LOG_LEVEL=debug
 ENVEOF
@@ -263,13 +263,13 @@ ENVEOF
       cp packages/backend/.env.example packages/backend/.env
     else
       cat > packages/backend/.env << 'ENVEOF'
-# Aura Health Backend - Local Development
+# Uzavita Backend - Local Development
 NODE_ENV=development
 PORT=4000
 LOG_LEVEL=debug
 
 # Database
-DATABASE_URL=postgresql://aura_admin:aura_dev_password@localhost:5432/aura_health
+DATABASE_URL=postgresql://uzavita_admin:uzavita_dev_password@localhost:5432/uzavita
 
 # Redis
 REDIS_URL=redis://localhost:6379
@@ -282,9 +282,9 @@ ELASTICSEARCH_URL=http://localhost:9200
 
 # S3 (MinIO)
 S3_ENDPOINT=http://localhost:9000
-S3_ACCESS_KEY=aura_minio_admin
-S3_SECRET_KEY=aura_minio_secret
-S3_BUCKET=aura-health-dev
+S3_ACCESS_KEY=uzavita_minio_admin
+S3_SECRET_KEY=uzavita_minio_secret
+S3_BUCKET=uzavita-dev
 S3_FORCE_PATH_STYLE=true
 
 # Auth
@@ -310,13 +310,13 @@ ENVEOF
       cp packages/ml-service/.env.example packages/ml-service/.env
     else
       cat > packages/ml-service/.env << 'ENVEOF'
-# Aura Health ML Service - Local Development
+# Uzavita ML Service - Local Development
 PORT=8000
 LOG_LEVEL=debug
 ENVIRONMENT=development
 
 # Database
-DATABASE_URL=postgresql://aura_admin:aura_dev_password@localhost:5432/aura_health
+DATABASE_URL=postgresql://uzavita_admin:uzavita_dev_password@localhost:5432/uzavita
 
 # Redis
 REDIS_URL=redis://localhost:6379
@@ -356,7 +356,7 @@ ENVEOF
     # Use docker to verify postgres is ready
     local pg_attempts=0
     while [[ $pg_attempts -lt 30 ]]; do
-      if docker compose exec -T postgres pg_isready -U aura_admin -d aura_health > /dev/null 2>&1; then
+      if docker compose exec -T postgres pg_isready -U uzavita_admin -d uzavita > /dev/null 2>&1; then
         log_success "PostgreSQL is ready"
         break
       fi
@@ -443,11 +443,11 @@ ENVEOF
   echo -e "  ${GREEN}ML Service:${NC}          http://localhost:8000"
   echo -e "  ${GREEN}ML Service Docs:${NC}     http://localhost:8000/docs"
   echo ""
-  echo -e "  ${BLUE}PostgreSQL:${NC}          localhost:5432 (aura_admin/aura_dev_password)"
+  echo -e "  ${BLUE}PostgreSQL:${NC}          localhost:5432 (uzavita_admin/uzavita_dev_password)"
   echo -e "  ${BLUE}Redis:${NC}               localhost:6379"
   echo -e "  ${BLUE}Elasticsearch:${NC}       http://localhost:9200"
   echo -e "  ${BLUE}Kafka:${NC}               localhost:9092"
-  echo -e "  ${BLUE}MinIO Console:${NC}       http://localhost:9001 (aura_minio_admin/aura_minio_secret)"
+  echo -e "  ${BLUE}MinIO Console:${NC}       http://localhost:9001 (uzavita_minio_admin/uzavita_minio_secret)"
   echo ""
   echo "----------------------------------------------------------------------"
   echo "  Quick Start Commands:"

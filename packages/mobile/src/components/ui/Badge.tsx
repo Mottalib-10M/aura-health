@@ -8,8 +8,8 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, type ViewStyle, type TextStyle } from 'react-native';
-import type { UrgencyLevel } from '@aura/shared/types/triage';
-import type { AppointmentStatus } from '@aura/shared/types/appointment';
+import type { UrgencyLevel } from '@uzavita/shared/types/triage';
+import type { AppointmentStatus } from '@uzavita/shared/types/appointment';
 import {
   Colors,
   Radius,

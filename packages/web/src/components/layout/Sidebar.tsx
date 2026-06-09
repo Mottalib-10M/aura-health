@@ -145,16 +145,16 @@ export function Sidebar() {
         {!collapsed && (
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
-              <span className="text-sm font-bold text-white">A</span>
+              <span className="text-sm font-bold text-white">U</span>
             </div>
             <span className="font-display text-lg font-bold text-slate-900 dark:text-white">
-              Aura
+              Uzavita
             </span>
           </div>
         )}
         {collapsed && (
           <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
-            <span className="text-sm font-bold text-white">A</span>
+            <span className="text-sm font-bold text-white">U</span>
           </div>
         )}
       </div>

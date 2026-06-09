@@ -1,13 +1,13 @@
 ###############################################################################
-# Aura Health - Kustomize Base
+# Uzavita - Kustomize Base
 ###############################################################################
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: aura-health
+namespace: uzavita
 
 commonLabels:
-  app.kubernetes.io/part-of: aura-health
+  app.kubernetes.io/part-of: uzavita
   app.kubernetes.io/managed-by: kustomize
 
 resources:
@@ -42,12 +42,12 @@ resources:
   - hpa.yaml
 
 images:
-  - name: aura-health/backend
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/backend
+  - name: uzavita/backend
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/backend
     newTag: latest
-  - name: aura-health/web
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/web
+  - name: uzavita/web
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/web
     newTag: latest
-  - name: aura-health/ml-service
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/ml-service
+  - name: uzavita/ml-service
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/ml-service
     newTag: latest

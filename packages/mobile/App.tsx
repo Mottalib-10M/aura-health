@@ -1,5 +1,5 @@
 /**
- * Aura Health - Root Application Component
+ * Uzavita - Root Application Component
  *
  * Initializes core providers: React Navigation, React Query, auth state
  * management, and splash screen handling. The app determines the initial
@@ -44,12 +44,12 @@ const queryClient = new QueryClient({
 });
 
 /**
- * Linking configuration for deep links into the Aura Health app.
+ * Linking configuration for deep links into the Uzavita app.
  * Supports direct navigation to triage results, appointments, and
  * health data views from push notifications and external links.
  */
 const linking = {
-  prefixes: ['aurahealth://', 'https://app.aurahealth.com'],
+  prefixes: ['uzavita://', 'https://app.uzavita.com'],
   config: {
     screens: {
       Auth: {

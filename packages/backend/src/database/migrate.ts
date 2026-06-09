@@ -11,8 +11,8 @@ dotenv.config();
 // ---------------------------------------------------------------------------
 const DB_HOST = process.env.DB_HOST ?? 'localhost';
 const DB_PORT = Number(process.env.DB_PORT ?? 5432);
-const DB_NAME = process.env.DB_NAME ?? 'aura_health';
-const DB_USER = process.env.DB_USER ?? 'aura';
+const DB_NAME = process.env.DB_NAME ?? 'uzavita';
+const DB_USER = process.env.DB_USER ?? 'uzavita';
 const DB_PASSWORD = process.env.DB_PASSWORD ?? '';
 
 const MIGRATIONS_DIR = path.join(import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname), 'migrations');

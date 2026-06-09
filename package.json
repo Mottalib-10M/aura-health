@@ -1,8 +1,8 @@
 {
-  "name": "aura-health",
+  "name": "uzavita",
   "version": "2.0.0",
   "private": true,
-  "description": "Aura Health - Central Asian Healthcare Ecosystem",
+  "description": "Uzavita - Central Asian Healthcare Ecosystem",
   "workspaces": [
     "packages/*"
   ],

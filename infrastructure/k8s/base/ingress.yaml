@@ -1,14 +1,14 @@
 ###############################################################################
-# Aura Health - Nginx Ingress
+# Uzavita - Nginx Ingress
 ###############################################################################
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: aura-ingress
-  namespace: aura-health
+  name: uzavita-ingress
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: ingress
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
   annotations:
     # Cert-manager TLS
     cert-manager.io/cluster-issuer: letsencrypt-prod
@@ -45,7 +45,7 @@ metadata:
 
     # CORS
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.aurahealth.app"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.uzavita.app"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
@@ -53,15 +53,15 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - api.aurahealth.app
-        - app.aurahealth.app
-        - ml.aurahealth.app
-      secretName: aura-tls-cert
+        - api.uzavita.app
+        - app.uzavita.app
+        - ml.uzavita.app
+      secretName: uzavita-tls-cert
   rules:
     # -------------------------------------------------------------------------
     # Backend API
     # -------------------------------------------------------------------------
-    - host: api.aurahealth.app
+    - host: api.uzavita.app
       http:
         paths:
           - path: /
@@ -75,7 +75,7 @@ spec:
     # -------------------------------------------------------------------------
     # Web Frontend
     # -------------------------------------------------------------------------
-    - host: app.aurahealth.app
+    - host: app.uzavita.app
       http:
         paths:
           - path: /
@@ -89,7 +89,7 @@ spec:
     # -------------------------------------------------------------------------
     # ML Service
     # -------------------------------------------------------------------------
-    - host: ml.aurahealth.app
+    - host: ml.uzavita.app
       http:
         paths:
           - path: /

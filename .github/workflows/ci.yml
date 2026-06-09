@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - CI Pipeline
+# Uzavita - CI Pipeline
 # Runs on push to main and on all pull requests
 ###############################################################################
 name: CI
@@ -17,9 +17,9 @@ concurrency:
 env:
   NODE_VERSION: "22"
   PYTHON_VERSION: "3.12"
-  POSTGRES_USER: aura_test
+  POSTGRES_USER: uzavita_test
   POSTGRES_PASSWORD: test_password
-  POSTGRES_DB: aura_health_test
+  POSTGRES_DB: uzavita_test
 
 permissions:
   contents: read
@@ -70,7 +70,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U aura_test -d aura_health_test"
+          --health-cmd "pg_isready -U uzavita_test -d uzavita_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -185,7 +185,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U aura_test -d aura_health_test"
+          --health-cmd "pg_isready -U uzavita_test -d uzavita_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -284,23 +284,23 @@ jobs:
         run: |
           docker build \
             -f infrastructure/docker/Dockerfile.backend \
-            -t aura-health/backend:ci-${{ github.sha }} \
+            -t uzavita/backend:ci-${{ github.sha }} \
             .
 
       - name: Build web Docker image
         run: |
           docker build \
             -f infrastructure/docker/Dockerfile.web \
-            -t aura-health/web:ci-${{ github.sha }} \
+            -t uzavita/web:ci-${{ github.sha }} \
             .
 
       - name: Verify Docker images
         run: |
-          docker images | grep aura-health
+          docker images | grep uzavita
           echo "Backend image size:"
-          docker inspect aura-health/backend:ci-${{ github.sha }} --format='{{.Size}}' | numfmt --to=iec
+          docker inspect uzavita/backend:ci-${{ github.sha }} --format='{{.Size}}' | numfmt --to=iec
           echo "Web image size:"
-          docker inspect aura-health/web:ci-${{ github.sha }} --format='{{.Size}}' | numfmt --to=iec
+          docker inspect uzavita/web:ci-${{ github.sha }} --format='{{.Size}}' | numfmt --to=iec
 
   # ===========================================================================
   # Security Scan
@@ -333,7 +333,7 @@ jobs:
         run: |
           docker build \
             -f infrastructure/docker/Dockerfile.backend \
-            -t aura-health/backend:scan \
+            -t uzavita/backend:scan \
             .
 
       - name: Install Trivy
@@ -359,7 +359,7 @@ jobs:
             --severity HIGH,CRITICAL \
             --format sarif \
             --output trivy-image-results.sarif \
-            aura-health/backend:scan || true
+            uzavita/backend:scan || true
 
       - name: Upload Trivy scan results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3

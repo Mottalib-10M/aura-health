@@ -17,8 +17,8 @@ import type {
   TriageOutput,
   TriageSession,
   TriageSessionStatus,
-} from '@aura/shared/types/triage';
-import type { VitalSigns } from '@aura/shared/types/patient';
+} from '@uzavita/shared/types/triage';
+import type { VitalSigns } from '@uzavita/shared/types/patient';
 
 // ---------------------------------------------------------------------------
 // Types

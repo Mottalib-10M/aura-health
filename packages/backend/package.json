@@ -1,7 +1,7 @@
 {
-  "name": "@aura/backend",
+  "name": "@uzavita/backend",
   "version": "0.1.0",
-  "description": "Aura Health Platform — Node.js + Express + Apollo Server 4 backend",
+  "description": "Uzavita Platform — Node.js + Express + Apollo Server 4 backend",
   "private": true,
   "type": "module",
   "main": "dist/index.js",

@@ -1,11 +1,11 @@
 ###############################################################################
-# Aura Health - Dev Overlay
+# Uzavita - Dev Overlay
 # Reduced replicas and resources for development/testing environments
 ###############################################################################
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: aura-health-dev
+namespace: uzavita-dev
 
 namePrefix: dev-
 
@@ -22,11 +22,11 @@ patches:
   # Create dev namespace
   - target:
       kind: Namespace
-      name: aura-health
+      name: uzavita
     patch: |
       - op: replace
         path: /metadata/name
-        value: aura-health-dev
+        value: uzavita-dev
 
   # Backend: reduce replicas to 1
   - target:
@@ -152,48 +152,48 @@ patches:
   # Ingress: dev hostnames
   - target:
       kind: Ingress
-      name: aura-ingress
+      name: uzavita-ingress
     patch: |
       - op: replace
         path: /spec/rules/0/host
-        value: api.dev.aurahealth.app
+        value: api.dev.uzavita.app
       - op: replace
         path: /spec/rules/1/host
-        value: app.dev.aurahealth.app
+        value: app.dev.uzavita.app
       - op: replace
         path: /spec/rules/2/host
-        value: ml.dev.aurahealth.app
+        value: ml.dev.uzavita.app
       - op: replace
         path: /spec/tls/0/hosts
         value:
-          - api.dev.aurahealth.app
-          - app.dev.aurahealth.app
-          - ml.dev.aurahealth.app
+          - api.dev.uzavita.app
+          - app.dev.uzavita.app
+          - ml.dev.uzavita.app
       - op: replace
         path: /spec/tls/0/secretName
-        value: aura-dev-tls-cert
+        value: uzavita-dev-tls-cert
 
 # ConfigMap overrides for dev
 configMapGenerator:
-  - name: aura-config
+  - name: uzavita-config
     behavior: merge
     literals:
       - NODE_ENV=development
       - LOG_LEVEL=debug
       - GRAPHQL_PLAYGROUND=true
       - GRAPHQL_INTROSPECTION=true
-      - API_URL=https://api.dev.aurahealth.app
-      - APP_URL=https://app.dev.aurahealth.app
-      - CORS_ORIGINS=https://app.dev.aurahealth.app,http://localhost:3000
+      - API_URL=https://api.dev.uzavita.app
+      - APP_URL=https://app.dev.uzavita.app
+      - CORS_ORIGINS=https://app.dev.uzavita.app,http://localhost:3000
       - RATE_LIMIT_MAX=1000
 
 images:
-  - name: aura-health/backend
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/backend
+  - name: uzavita/backend
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/backend
     newTag: dev-latest
-  - name: aura-health/web
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/web
+  - name: uzavita/web
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/web
     newTag: dev-latest
-  - name: aura-health/ml-service
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/ml-service
+  - name: uzavita/ml-service
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/ml-service
     newTag: dev-latest

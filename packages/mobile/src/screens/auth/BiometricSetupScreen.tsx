@@ -152,8 +152,8 @@ export function BiometricSetupScreen({
   const handleShareRecoveryCodes = useCallback(async () => {
     const codesText = recoveryCodes.join('  |  ');
     await Share.share({
-      message: `Aura Health Recovery Codes:\n\n${codesText}\n\nStore these codes in a safe place. You will need them if you lose access to your biometric login.`,
-      title: 'Aura Health Recovery Codes',
+      message: `Uzavita Recovery Codes:\n\n${codesText}\n\nStore these codes in a safe place. You will need them if you lose access to your biometric login.`,
+      title: 'Uzavita Recovery Codes',
     });
   }, [recoveryCodes]);
 

@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - Local Development Stack
+# Uzavita - Local Development Stack
 # Usage: docker compose up -d
 # Docs:  See scripts/setup-local.sh for full setup instructions
 ###############################################################################
@@ -16,22 +16,22 @@ services:
   # ---------------------------------------------------------------------------
   postgres:
     image: timescale/timescaledb:latest-pg16
-    container_name: aura-postgres
+    container_name: uzavita-postgres
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: aura_admin
-      POSTGRES_PASSWORD: aura_dev_password
-      POSTGRES_DB: aura_health
+      POSTGRES_USER: uzavita_admin
+      POSTGRES_PASSWORD: uzavita_dev_password
+      POSTGRES_DB: uzavita
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.utf8 --lc-ctype=en_US.utf8"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infrastructure/docker/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     networks:
-      - aura-network
+      - uzavita-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aura_admin -d aura_health"]
+      test: ["CMD-SHELL", "pg_isready -U uzavita_admin -d uzavita"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +42,7 @@ services:
   # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
-    container_name: aura-redis
+    container_name: uzavita-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -55,7 +55,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - aura-network
+      - uzavita-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -68,7 +68,7 @@ services:
   # ---------------------------------------------------------------------------
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
-    container_name: aura-elasticsearch
+    container_name: uzavita-elasticsearch
     restart: unless-stopped
     ports:
       - "9200:9200"
@@ -76,7 +76,7 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - xpack.security.enrollment.enabled=false
-      - cluster.name=aura-health-es
+      - cluster.name=uzavita-es
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
@@ -86,7 +86,7 @@ services:
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
-      - aura-network
+      - uzavita-network
     healthcheck:
       test: ["CMD-SHELL", "curl -fsSL http://localhost:9200/_cluster/health || exit 1"]
       interval: 15s
@@ -99,7 +99,7 @@ services:
   # ---------------------------------------------------------------------------
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.0
-    container_name: aura-zookeeper
+    container_name: uzavita-zookeeper
     restart: unless-stopped
     ports:
       - "2181:2181"
@@ -111,7 +111,7 @@ services:
       - zookeeper_data:/var/lib/zookeeper/data
       - zookeeper_logs:/var/lib/zookeeper/log
     networks:
-      - aura-network
+      - uzavita-network
     healthcheck:
       test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
       interval: 15s
@@ -124,7 +124,7 @@ services:
   # ---------------------------------------------------------------------------
   kafka:
     image: confluentinc/cp-kafka:7.7.0
-    container_name: aura-kafka
+    container_name: uzavita-kafka
     restart: unless-stopped
     ports:
       - "9092:9092"
@@ -147,7 +147,7 @@ services:
       zookeeper:
         condition: service_healthy
     networks:
-      - aura-network
+      - uzavita-network
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list || exit 1"]
       interval: 15s
@@ -160,19 +160,19 @@ services:
   # ---------------------------------------------------------------------------
   minio:
     image: minio/minio:latest
-    container_name: aura-minio
+    container_name: uzavita-minio
     restart: unless-stopped
     ports:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: aura_minio_admin
-      MINIO_ROOT_PASSWORD: aura_minio_secret
+      MINIO_ROOT_USER: uzavita_minio_admin
+      MINIO_ROOT_PASSWORD: uzavita_minio_secret
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
     networks:
-      - aura-network
+      - uzavita-network
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 15s
@@ -187,21 +187,21 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.backend
-    container_name: aura-backend
+    container_name: uzavita-backend
     restart: unless-stopped
     ports:
       - "4000:4000"
     environment:
       <<: *common-env
       PORT: 4000
-      DATABASE_URL: postgresql://aura_admin:aura_dev_password@postgres:5432/aura_health
+      DATABASE_URL: postgresql://uzavita_admin:uzavita_dev_password@postgres:5432/uzavita
       REDIS_URL: redis://redis:6379
       KAFKA_BROKERS: kafka:29092
       ELASTICSEARCH_URL: http://elasticsearch:9200
       S3_ENDPOINT: http://minio:9000
-      S3_ACCESS_KEY: aura_minio_admin
-      S3_SECRET_KEY: aura_minio_secret
-      S3_BUCKET: aura-health-dev
+      S3_ACCESS_KEY: uzavita_minio_admin
+      S3_SECRET_KEY: uzavita_minio_secret
+      S3_BUCKET: uzavita-dev
       S3_FORCE_PATH_STYLE: "true"
       JWT_SECRET: dev-jwt-secret-replace-in-production
       JWT_REFRESH_SECRET: dev-jwt-refresh-secret-replace-in-production
@@ -218,7 +218,7 @@ services:
       kafka:
         condition: service_healthy
     networks:
-      - aura-network
+      - uzavita-network
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
       interval: 15s
@@ -233,7 +233,7 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.web
-    container_name: aura-web
+    container_name: uzavita-web
     restart: unless-stopped
     ports:
       - "3000:80"
@@ -245,7 +245,7 @@ services:
     depends_on:
       - backend
     networks:
-      - aura-network
+      - uzavita-network
 
   # ---------------------------------------------------------------------------
   # ML Service (Python / FastAPI)
@@ -254,14 +254,14 @@ services:
     build:
       context: .
       dockerfile: packages/ml-service/Dockerfile
-    container_name: aura-ml-service
+    container_name: uzavita-ml-service
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       <<: *common-env
       PORT: 8000
-      DATABASE_URL: postgresql://aura_admin:aura_dev_password@postgres:5432/aura_health
+      DATABASE_URL: postgresql://uzavita_admin:uzavita_dev_password@postgres:5432/uzavita
       REDIS_URL: redis://redis:6379
       KAFKA_BROKERS: kafka:29092
       MODEL_CACHE_DIR: /app/models
@@ -278,7 +278,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - aura-network
+      - uzavita-network
     healthcheck:
       test: ["CMD-SHELL", "curl -fsSL http://localhost:8000/health || exit 1"]
       interval: 15s
@@ -311,7 +311,7 @@ volumes:
 # Networks
 # =============================================================================
 networks:
-  aura-network:
+  uzavita-network:
     driver: bridge
     ipam:
       config:

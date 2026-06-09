@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Central configuration for the Aura ML Service.
+    """Central configuration for the Uzavita ML Service.
 
     All values are loaded from environment variables or a `.env` file located at the
     project root.  Secrets should **never** be committed to source control.
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     # -- Infrastructure ------------------------------------------------------------
     DATABASE_URL: str = Field(
-        default="postgresql+asyncpg://aura:aura@localhost:5432/aura",
+        default="postgresql+asyncpg://uzavita:uzavita@localhost:5432/uzavita",
         description="Async PostgreSQL connection string (asyncpg dialect).",
     )
     REDIS_URL: str = Field(
@@ -71,7 +71,7 @@ class Settings(BaseSettings):
 
     # -- Model Serving -------------------------------------------------------------
     MODEL_CACHE_DIR: str = Field(
-        default="/tmp/aura-models",
+        default="/tmp/uzavita-models",
         description="Local directory for caching downloaded model weights.",
     )
     VLLM_HOST: str = Field(
@@ -89,7 +89,7 @@ class Settings(BaseSettings):
         description="Deployment environment identifier.",
     )
     SERVICE_NAME: str = Field(
-        default="aura-ml-service",
+        default="uzavita-ml-service",
         description="Logical service name for tracing and metrics.",
     )
     CORS_ORIGINS: str = Field(

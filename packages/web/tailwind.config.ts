@@ -6,33 +6,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary: Teal/Cyan medical theme
+        // Primary: Emerald - Life & Vitality
         primary: {
-          50: '#effcfc',
-          100: '#d6f7f7',
-          200: '#b2eeef',
-          300: '#7de0e3',
-          400: '#40c9cf',
-          500: '#25adb5',
-          600: '#218b98',
-          700: '#22717c',
-          800: '#245c66',
-          900: '#224d56',
-          950: '#10323a',
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+          950: '#022c22',
         },
-        // Secondary: Deep blue for professional trust
+        // Secondary: Indigo - Modern & Trustworthy
         secondary: {
-          50: '#eff4ff',
-          100: '#dbe6fe',
-          200: '#bfd3fe',
-          300: '#93b4fd',
-          400: '#6090fa',
-          500: '#3b6cf5',
-          600: '#254cea',
-          700: '#1d3ad7',
-          800: '#1e31ae',
-          900: '#1e2f89',
-          950: '#172054',
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b',
         },
         // Accent: Warm amber for alerts and CTAs
         accent: {
@@ -111,7 +111,7 @@ const config: Config = {
       boxShadow: {
         'card': '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03)',
         'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04)',
-        'glow-primary': '0 0 20px rgba(37, 173, 181, 0.15)',
+        'glow-primary': '0 0 20px rgba(5, 150, 105, 0.15)',
         'glow-danger': '0 0 20px rgba(239, 68, 68, 0.15)',
       },
       animation: {

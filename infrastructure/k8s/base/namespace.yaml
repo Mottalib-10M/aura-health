@@ -1,12 +1,12 @@
 ###############################################################################
-# Aura Health - Kubernetes Namespace
+# Uzavita - Kubernetes Namespace
 ###############################################################################
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: aura-health
+  name: uzavita
   labels:
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
     app.kubernetes.io/managed-by: kustomize
   annotations:
-    description: "Aura Health platform namespace"
+    description: "Uzavita platform namespace"

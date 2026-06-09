@@ -1,5 +1,5 @@
 /**
- * Development seed data for Aura Health Platform.
+ * Development seed data for Uzavita Platform.
  * Populates the database with realistic sample data for Uzbekistan,
  * Kyrgyzstan, and Tajikistan.
  *

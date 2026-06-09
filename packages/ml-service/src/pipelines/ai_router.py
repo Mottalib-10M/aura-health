@@ -1,7 +1,7 @@
 """Multi-Model Orchestration Layer -- Python equivalent of ai-router.ts.
 
 Provides centralized model selection, routing, fallback chains, and cost
-estimation for all AI/ML model calls in the Aura Health platform.
+estimation for all AI/ML model calls in the Uzavita platform.
 """
 
 from __future__ import annotations

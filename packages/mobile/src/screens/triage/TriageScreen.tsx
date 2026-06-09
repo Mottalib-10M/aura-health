@@ -36,7 +36,7 @@ import { TextInput } from '../../components/ui/TextInput';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { useTriage, type TriageStep, type FollowUpAnswer } from '../../hooks/useTriage';
-import type { VitalSigns } from '@aura/shared/types/patient';
+import type { VitalSigns } from '@uzavita/shared/types/patient';
 import {
   Colors,
   Spacing,

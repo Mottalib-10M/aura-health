@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###############################################################################
-# Aura Health - Key Generation Script
+# Uzavita - Key Generation Script
 #
 # Generates cryptographic keys and secrets for development:
 #   - JWT access token secret
@@ -189,7 +189,7 @@ main() {
     env)
       output=$(cat << ENVEOF
 ###############################################################################
-# Aura Health - Generated Secrets
+# Uzavita - Generated Secrets
 # Generated at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 #
 # WARNING: Store these securely. Do NOT commit to version control.
@@ -253,7 +253,7 @@ JSONEOF
 
     yaml)
       output=$(cat << YAMLEOF
-# Aura Health - Generated Secrets
+# Uzavita - Generated Secrets
 # Generated at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 # WARNING: Store these securely. Do NOT commit to version control.
 

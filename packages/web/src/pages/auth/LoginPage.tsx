@@ -27,17 +27,17 @@ export function LoginPage() {
         <div>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-              <span className="text-lg font-bold text-white">A</span>
+              <span className="text-lg font-bold text-white">U</span>
             </div>
             <span className="font-display text-2xl font-bold text-white">
-              Aura Health
+              Uzavita
             </span>
           </div>
         </div>
 
         <div className="space-y-6">
           <h1 className="font-display text-4xl font-bold leading-tight text-white text-balance">
-            AI-Powered Healthcare for Central Asia
+            Your Health, Your Life, Connected
           </h1>
           <p className="max-w-md text-lg text-primary-100">
             Intelligent triage, real-time telemetry monitoring, and
@@ -60,7 +60,7 @@ export function LoginPage() {
         </div>
 
         <p className="text-xs text-primary-300">
-          &copy; {new Date().getFullYear()} Aura Health. All rights reserved.
+          &copy; {new Date().getFullYear()} Uzavita. All rights reserved.
         </p>
       </div>
 
@@ -70,10 +70,10 @@ export function LoginPage() {
           {/* Mobile logo */}
           <div className="mb-8 flex items-center gap-2 lg:hidden">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600">
-              <span className="text-sm font-bold text-white">A</span>
+              <span className="text-sm font-bold text-white">U</span>
             </div>
             <span className="font-display text-xl font-bold text-slate-900 dark:text-white">
-              Aura Health
+              Uzavita
             </span>
           </div>
 

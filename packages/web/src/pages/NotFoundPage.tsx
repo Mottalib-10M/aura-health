@@ -38,10 +38,10 @@ export function NotFoundPage() {
         {/* Branding */}
         <div className="mt-12 flex items-center justify-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary-600">
-            <span className="text-xs font-bold text-white">A</span>
+            <span className="text-xs font-bold text-white">U</span>
           </div>
           <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-            Aura Health
+            Uzavita
           </span>
         </div>
       </div>

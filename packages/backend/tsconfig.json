@@ -5,7 +5,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@aura/shared/*": ["../shared/src/*"]
+      "@uzavita/shared/*": ["../shared/src/*"]
     }
   },
   "include": ["src/**/*.ts"],

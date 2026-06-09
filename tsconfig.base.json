@@ -18,7 +18,7 @@
     "exactOptionalPropertyTypes": false,
     "isolatedModules": true,
     "paths": {
-      "@aura/shared/*": ["./packages/shared/src/*"]
+      "@uzavita/shared/*": ["./packages/shared/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "build"]

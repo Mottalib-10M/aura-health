@@ -1,21 +1,21 @@
 ###############################################################################
-# Aura Health - ConfigMap (non-secret configuration)
+# Uzavita - ConfigMap (non-secret configuration)
 ###############################################################################
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: aura-config
-  namespace: aura-health
+  name: uzavita-config
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: config
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 data:
   # -------------------------------------------------------------------------
   # Database
   # -------------------------------------------------------------------------
-  DATABASE_HOST: postgres.aura-health.svc.cluster.local
+  DATABASE_HOST: postgres.uzavita.svc.cluster.local
   DATABASE_PORT: "5432"
-  DATABASE_NAME: aura_health
+  DATABASE_NAME: uzavita
   DATABASE_SSL: "true"
   DATABASE_POOL_MIN: "5"
   DATABASE_POOL_MAX: "20"
@@ -23,32 +23,32 @@ data:
   # -------------------------------------------------------------------------
   # Redis
   # -------------------------------------------------------------------------
-  REDIS_HOST: redis.aura-health.svc.cluster.local
+  REDIS_HOST: redis.uzavita.svc.cluster.local
   REDIS_PORT: "6379"
   REDIS_DB: "0"
-  REDIS_KEY_PREFIX: "aura:"
+  REDIS_KEY_PREFIX: "uzavita:"
 
   # -------------------------------------------------------------------------
   # Kafka
   # -------------------------------------------------------------------------
-  KAFKA_BROKERS: kafka-0.kafka-headless.aura-health.svc.cluster.local:9092,kafka-1.kafka-headless.aura-health.svc.cluster.local:9092,kafka-2.kafka-headless.aura-health.svc.cluster.local:9092
-  KAFKA_CLIENT_ID: aura-health
-  KAFKA_GROUP_ID: aura-health-consumers
+  KAFKA_BROKERS: kafka-0.kafka-headless.uzavita.svc.cluster.local:9092,kafka-1.kafka-headless.uzavita.svc.cluster.local:9092,kafka-2.kafka-headless.uzavita.svc.cluster.local:9092
+  KAFKA_CLIENT_ID: uzavita
+  KAFKA_GROUP_ID: uzavita-consumers
   KAFKA_RETRY_ATTEMPTS: "5"
   KAFKA_RETRY_DELAY_MS: "1000"
 
   # -------------------------------------------------------------------------
   # Elasticsearch
   # -------------------------------------------------------------------------
-  ELASTICSEARCH_URL: http://elasticsearch.aura-health.svc.cluster.local:9200
-  ELASTICSEARCH_INDEX_PREFIX: aura
+  ELASTICSEARCH_URL: http://elasticsearch.uzavita.svc.cluster.local:9200
+  ELASTICSEARCH_INDEX_PREFIX: uzavita
 
   # -------------------------------------------------------------------------
   # API Configuration
   # -------------------------------------------------------------------------
-  API_URL: https://api.aurahealth.app
-  APP_URL: https://app.aurahealth.app
-  ML_SERVICE_URL: http://ml-service.aura-health.svc.cluster.local:8000
+  API_URL: https://api.uzavita.app
+  APP_URL: https://app.uzavita.app
+  ML_SERVICE_URL: http://ml-service.uzavita.svc.cluster.local:8000
   GRAPHQL_PLAYGROUND: "false"
   GRAPHQL_INTROSPECTION: "false"
 
@@ -62,7 +62,7 @@ data:
   # -------------------------------------------------------------------------
   # CORS
   # -------------------------------------------------------------------------
-  CORS_ORIGINS: https://app.aurahealth.app
+  CORS_ORIGINS: https://app.uzavita.app
   CORS_METHODS: GET,POST,PUT,PATCH,DELETE,OPTIONS
   CORS_CREDENTIALS: "true"
 
@@ -78,7 +78,7 @@ data:
   # S3 / Object Storage
   # -------------------------------------------------------------------------
   S3_REGION: us-east-1
-  S3_BUCKET: aura-health-production
+  S3_BUCKET: uzavita-production
   S3_FORCE_PATH_STYLE: "false"
 
   # -------------------------------------------------------------------------

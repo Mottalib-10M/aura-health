@@ -257,7 +257,7 @@ function buildTriagePrompt(
   preprocessed: ReturnType<typeof preprocessSymptoms>,
   context: PatientContext,
 ): Array<{ role: 'system' | 'user'; content: string }> {
-  const systemPrompt = `You are an AI clinical triage assistant for the Aura Health platform, serving Central Asian countries (Uzbekistan, Kyrgyzstan, Tajikistan). Your role is to assess symptom urgency following WHO IMAI (Integrated Management of Adolescent and Adult Illness) guidelines.
+  const systemPrompt = `You are an AI clinical triage assistant for the Uzavita platform, serving Central Asian countries (Uzbekistan, Kyrgyzstan, Tajikistan). Your role is to assess symptom urgency following WHO IMAI (Integrated Management of Adolescent and Adult Illness) guidelines.
 
 CRITICAL RULES:
 1. You are a TRIAGE tool, not a diagnostic tool. You help prioritize urgency and suggest next steps.

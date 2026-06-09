@@ -2,15 +2,15 @@
  * Mobile Formatting Utilities & Design Tokens
  *
  * Centralizes color palette, spacing, typography, and formatting functions
- * for the Aura Health design system. All visual constants derive from
+ * for the Uzavita design system. All visual constants derive from
  * these tokens to ensure consistency across the application.
  */
 
 import { format, formatDistanceToNow, parseISO, isValid } from 'date-fns';
-import type { UrgencyLevel } from '@aura/shared/types/triage';
+import type { UrgencyLevel } from '@uzavita/shared/types/triage';
 
 // ---------------------------------------------------------------------------
-// Color Palette - Aura Health Design System
+// Color Palette - Uzavita Design System
 // ---------------------------------------------------------------------------
 
 export const Colors = {

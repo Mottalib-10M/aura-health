@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// @aura/shared - Type Exports
+// @uzavita/shared - Type Exports
 // ---------------------------------------------------------------------------
 
 // Patient domain
@@ -124,7 +124,7 @@ export type {
   BiometricVerificationRequest,
   BiometricVerificationResult,
   UserSession,
-  AuraTokenPayload,
+  UzavitaTokenPayload,
   AuthTokenPair,
   LoginRequest,
   LoginResponse,

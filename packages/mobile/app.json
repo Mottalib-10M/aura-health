@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Aura Health",
-    "slug": "aura-health",
+    "name": "Uzavita",
+    "slug": "uzavita",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
-    "scheme": "aurahealth",
+    "scheme": "uzavita",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -18,17 +18,17 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aurahealth.app",
+      "bundleIdentifier": "com.uzavita.app",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "Aura Health needs camera access for biometric enrollment and document scanning.",
-        "NSFaceIDUsageDescription": "Aura Health uses Face ID for secure, passwordless login.",
-        "NSBluetoothAlwaysUsageDescription": "Aura Health connects to medical wearables and health monitoring devices via Bluetooth.",
-        "NSBluetoothPeripheralUsageDescription": "Aura Health communicates with Bluetooth-enabled medical devices to sync your health data.",
-        "NSHealthShareUsageDescription": "Aura Health reads your health data to provide personalized health insights and triage recommendations.",
-        "NSHealthUpdateUsageDescription": "Aura Health writes health data from connected medical devices to your Health app.",
-        "NSMicrophoneUsageDescription": "Aura Health uses the microphone for voice-based symptom description during triage.",
-        "NSLocationWhenInUseUsageDescription": "Aura Health uses your location to find nearby healthcare facilities and for regional health insights."
+        "NSCameraUsageDescription": "Uzavita needs camera access for biometric enrollment and document scanning.",
+        "NSFaceIDUsageDescription": "Uzavita uses Face ID for secure, passwordless login.",
+        "NSBluetoothAlwaysUsageDescription": "Uzavita connects to medical wearables and health monitoring devices via Bluetooth.",
+        "NSBluetoothPeripheralUsageDescription": "Uzavita communicates with Bluetooth-enabled medical devices to sync your health data.",
+        "NSHealthShareUsageDescription": "Uzavita reads your health data to provide personalized health insights and triage recommendations.",
+        "NSHealthUpdateUsageDescription": "Uzavita writes health data from connected medical devices to your Health app.",
+        "NSMicrophoneUsageDescription": "Uzavita uses the microphone for voice-based symptom description during triage.",
+        "NSLocationWhenInUseUsageDescription": "Uzavita uses your location to find nearby healthcare facilities and for regional health insights."
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -43,7 +43,7 @@
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#0D9488"
       },
-      "package": "com.aurahealth.app",
+      "package": "com.uzavita.app",
       "versionCode": 1,
       "permissions": [
         "CAMERA",
@@ -82,11 +82,11 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "aura-health-mobile"
+        "projectId": "uzavita-mobile"
       }
     },
     "updates": {
-      "url": "https://u.expo.dev/aura-health-mobile",
+      "url": "https://u.expo.dev/uzavita-mobile",
       "fallbackToCacheTimeout": 30000
     },
     "runtimeVersion": {
@@ -96,7 +96,7 @@
       "icon": "./src/assets/notification-icon.png",
       "color": "#0D9488",
       "androidMode": "default",
-      "androidCollapsedTitle": "Aura Health"
+      "androidCollapsedTitle": "Uzavita"
     }
   }
 }

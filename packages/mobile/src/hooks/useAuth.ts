@@ -11,18 +11,18 @@ import { useCallback, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '../stores/authStore';
 import { apiClient } from '../services/api';
-import type { LoginRequest, AuthTokenPair } from '@aura/shared/types/auth';
+import type { LoginRequest, AuthTokenPair } from '@uzavita/shared/types/auth';
 
 // ---------------------------------------------------------------------------
 // Secure Store Keys
 // ---------------------------------------------------------------------------
 
 const SECURE_KEYS = {
-  ACCESS_TOKEN: 'aura_access_token',
-  REFRESH_TOKEN: 'aura_refresh_token',
-  USER_ID: 'aura_user_id',
-  BIOMETRIC_ENABLED: 'aura_biometric_enabled',
-  BIOMETRIC_TOKEN: 'aura_biometric_token',
+  ACCESS_TOKEN: 'uzavita_access_token',
+  REFRESH_TOKEN: 'uzavita_refresh_token',
+  USER_ID: 'uzavita_user_id',
+  BIOMETRIC_ENABLED: 'uzavita_biometric_enabled',
+  BIOMETRIC_TOKEN: 'uzavita_biometric_token',
 } as const;
 
 // ---------------------------------------------------------------------------

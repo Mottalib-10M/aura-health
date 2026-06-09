@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({ errorInfo });
     // In production, this would send to an error reporting service
-    console.error('[Aura Health] Uncaught error:', error, errorInfo);
+    console.error('[Uzavita] Uncaught error:', error, errorInfo);
   }
 
   handleReset = (): void => {
@@ -67,7 +67,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               Something went wrong
             </h1>
             <p className="mb-6 text-center text-sm text-slate-500 dark:text-slate-400">
-              An unexpected error occurred in the Aura Health application. Please try again or return to the home page.
+              An unexpected error occurred in the Uzavita application. Please try again or return to the home page.
             </p>
 
             {/* Error details in dev mode */}
@@ -106,10 +106,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             {/* Branding */}
             <div className="mt-8 flex items-center justify-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-700">
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary-600">
-                <span className="text-xs font-bold text-white">A</span>
+                <span className="text-xs font-bold text-white">U</span>
               </div>
               <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                Aura Health
+                Uzavita
               </span>
             </div>
           </div>

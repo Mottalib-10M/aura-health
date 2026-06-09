@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - CD Pipeline
+# Uzavita - CD Pipeline
 # Deploys to staging automatically and production with manual approval
 ###############################################################################
 name: Deploy
@@ -31,7 +31,7 @@ concurrency:
 env:
   AWS_REGION: us-east-1
   ECR_REGISTRY: 123456789.dkr.ecr.us-east-1.amazonaws.com
-  EKS_CLUSTER_NAME: aura-health
+  EKS_CLUSTER_NAME: uzavita
 
 permissions:
   id-token: write
@@ -82,8 +82,8 @@ jobs:
           file: infrastructure/docker/Dockerfile.backend
           push: true
           tags: |
-            ${{ env.ECR_REGISTRY }}/aura-health/backend:${{ steps.set-tag.outputs.tag }}
-            ${{ env.ECR_REGISTRY }}/aura-health/backend:latest
+            ${{ env.ECR_REGISTRY }}/uzavita/backend:${{ steps.set-tag.outputs.tag }}
+            ${{ env.ECR_REGISTRY }}/uzavita/backend:latest
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
           platforms: linux/amd64
@@ -95,8 +95,8 @@ jobs:
           file: infrastructure/docker/Dockerfile.web
           push: true
           tags: |
-            ${{ env.ECR_REGISTRY }}/aura-health/web:${{ steps.set-tag.outputs.tag }}
-            ${{ env.ECR_REGISTRY }}/aura-health/web:latest
+            ${{ env.ECR_REGISTRY }}/uzavita/web:${{ steps.set-tag.outputs.tag }}
+            ${{ env.ECR_REGISTRY }}/uzavita/web:latest
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
           platforms: linux/amd64
@@ -108,8 +108,8 @@ jobs:
           file: packages/ml-service/Dockerfile
           push: true
           tags: |
-            ${{ env.ECR_REGISTRY }}/aura-health/ml-service:${{ steps.set-tag.outputs.tag }}
-            ${{ env.ECR_REGISTRY }}/aura-health/ml-service:latest
+            ${{ env.ECR_REGISTRY }}/uzavita/ml-service:${{ steps.set-tag.outputs.tag }}
+            ${{ env.ECR_REGISTRY }}/uzavita/ml-service:latest
           cache-from: type=gha,scope=ml-service
           cache-to: type=gha,mode=max,scope=ml-service
           platforms: linux/amd64
@@ -125,7 +125,7 @@ jobs:
       github.event.inputs.environment != 'production'
     environment:
       name: staging
-      url: https://app.staging.aurahealth.app
+      url: https://app.staging.uzavita.app
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -151,9 +151,9 @@ jobs:
         run: |
           cd infrastructure/k8s/overlays/staging
           kustomize edit set image \
-            aura-health/backend=${{ env.ECR_REGISTRY }}/aura-health/backend:${{ needs.build-images.outputs.image_tag }} \
-            aura-health/web=${{ env.ECR_REGISTRY }}/aura-health/web:${{ needs.build-images.outputs.image_tag }} \
-            aura-health/ml-service=${{ env.ECR_REGISTRY }}/aura-health/ml-service:${{ needs.build-images.outputs.image_tag }}
+            uzavita/backend=${{ env.ECR_REGISTRY }}/uzavita/backend:${{ needs.build-images.outputs.image_tag }} \
+            uzavita/web=${{ env.ECR_REGISTRY }}/uzavita/web:${{ needs.build-images.outputs.image_tag }} \
+            uzavita/ml-service=${{ env.ECR_REGISTRY }}/uzavita/ml-service:${{ needs.build-images.outputs.image_tag }}
 
       - name: Deploy to staging
         run: |
@@ -161,9 +161,9 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/staging-backend -n aura-health-staging --timeout=300s
-          kubectl rollout status deployment/staging-web -n aura-health-staging --timeout=300s
-          kubectl rollout status deployment/staging-ml-service -n aura-health-staging --timeout=300s
+          kubectl rollout status deployment/staging-backend -n uzavita-staging --timeout=300s
+          kubectl rollout status deployment/staging-web -n uzavita-staging --timeout=300s
+          kubectl rollout status deployment/staging-ml-service -n uzavita-staging --timeout=300s
 
       - name: Run smoke tests
         run: |
@@ -171,7 +171,7 @@ jobs:
           sleep 30
 
           # Health check endpoints
-          BACKEND_STATUS=$(kubectl exec -n aura-health-staging deploy/staging-backend -- \
+          BACKEND_STATUS=$(kubectl exec -n uzavita-staging deploy/staging-backend -- \
             wget -qO- http://localhost:4000/health 2>/dev/null || echo "failed")
           echo "Backend health: ${BACKEND_STATUS}"
 
@@ -194,7 +194,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Aura Health - Staging Deployed* :white_check_mark:\n*Commit:* `${{ needs.build-images.outputs.image_tag }}`\n*Triggered by:* ${{ github.actor }}\n*URL:* https://app.staging.aurahealth.app"
+                    "text": "*Uzavita - Staging Deployed* :white_check_mark:\n*Commit:* `${{ needs.build-images.outputs.image_tag }}`\n*Triggered by:* ${{ github.actor }}\n*URL:* https://app.staging.uzavita.app"
                   }
                 }
               ]
@@ -214,7 +214,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Aura Health - Staging Deploy FAILED* :x:\n*Commit:* `${{ needs.build-images.outputs.image_tag }}`\n*Triggered by:* ${{ github.actor }}\n*Workflow:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    "text": "*Uzavita - Staging Deploy FAILED* :x:\n*Commit:* `${{ needs.build-images.outputs.image_tag }}`\n*Triggered by:* ${{ github.actor }}\n*Workflow:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
                   }
                 }
               ]
@@ -232,7 +232,7 @@ jobs:
       (needs.deploy-staging.result == 'success' || github.event.inputs.environment == 'production')
     environment:
       name: production
-      url: https://app.aurahealth.app
+      url: https://app.uzavita.app
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -258,9 +258,9 @@ jobs:
         run: |
           cd infrastructure/k8s/overlays/production
           kustomize edit set image \
-            aura-health/backend=${{ env.ECR_REGISTRY }}/aura-health/backend:${{ needs.build-images.outputs.image_tag }} \
-            aura-health/web=${{ env.ECR_REGISTRY }}/aura-health/web:${{ needs.build-images.outputs.image_tag }} \
-            aura-health/ml-service=${{ env.ECR_REGISTRY }}/aura-health/ml-service:${{ needs.build-images.outputs.image_tag }}
+            uzavita/backend=${{ env.ECR_REGISTRY }}/uzavita/backend:${{ needs.build-images.outputs.image_tag }} \
+            uzavita/web=${{ env.ECR_REGISTRY }}/uzavita/web:${{ needs.build-images.outputs.image_tag }} \
+            uzavita/ml-service=${{ env.ECR_REGISTRY }}/uzavita/ml-service:${{ needs.build-images.outputs.image_tag }}
 
       - name: Deploy to production
         run: |
@@ -268,20 +268,20 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/prod-backend -n aura-health-production --timeout=600s
-          kubectl rollout status deployment/prod-web -n aura-health-production --timeout=300s
-          kubectl rollout status deployment/prod-ml-service -n aura-health-production --timeout=600s
+          kubectl rollout status deployment/prod-backend -n uzavita-production --timeout=600s
+          kubectl rollout status deployment/prod-web -n uzavita-production --timeout=300s
+          kubectl rollout status deployment/prod-ml-service -n uzavita-production --timeout=600s
 
       - name: Run production smoke tests
         run: |
           sleep 30
 
           # Verify all pods are running
-          READY_PODS=$(kubectl get pods -n aura-health-production -l app.kubernetes.io/part-of=aura-health --no-headers | grep Running | wc -l)
+          READY_PODS=$(kubectl get pods -n uzavita-production -l app.kubernetes.io/part-of=uzavita --no-headers | grep Running | wc -l)
           echo "Running pods: ${READY_PODS}"
 
           # Health checks via internal service endpoints
-          kubectl exec -n aura-health-production deploy/prod-backend -- \
+          kubectl exec -n uzavita-production deploy/prod-backend -- \
             wget -qO- http://localhost:4000/health
 
       - name: Notify Slack - Production Success
@@ -298,7 +298,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Aura Health - PRODUCTION Deployed* :rocket:\n*Image Tag:* `${{ needs.build-images.outputs.image_tag }}`\n*Triggered by:* ${{ github.actor }}\n*URL:* https://app.aurahealth.app"
+                    "text": "*Uzavita - PRODUCTION Deployed* :rocket:\n*Image Tag:* `${{ needs.build-images.outputs.image_tag }}`\n*Triggered by:* ${{ github.actor }}\n*URL:* https://app.uzavita.app"
                   }
                 }
               ]
@@ -318,7 +318,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Aura Health - PRODUCTION Deploy FAILED* :rotating_light:\n*Image Tag:* `${{ needs.build-images.outputs.image_tag }}`\n*Triggered by:* ${{ github.actor }}\n*Workflow:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n*ACTION REQUIRED:* Check rollout status and consider rollback."
+                    "text": "*Uzavita - PRODUCTION Deploy FAILED* :rotating_light:\n*Image Tag:* `${{ needs.build-images.outputs.image_tag }}`\n*Triggered by:* ${{ github.actor }}\n*Workflow:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n*ACTION REQUIRED:* Check rollout status and consider rollback."
                   }
                 }
               ]

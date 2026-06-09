@@ -1,4 +1,4 @@
-"""JWT authentication dependency for the Aura Health ML Service.
+"""JWT authentication dependency for the Uzavita ML Service.
 
 Validates Bearer tokens from the Authorization header using python-jose.
 Public endpoints (health, ready, metrics) are excluded from authentication.

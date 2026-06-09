@@ -105,7 +105,7 @@ export function ProfileScreen() {
   const handleLogout = useCallback(() => {
     Alert.alert(
       'Log Out',
-      'Are you sure you want to log out of Aura Health?',
+      'Are you sure you want to log out of Uzavita?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -295,7 +295,7 @@ export function ProfileScreen() {
                 <Path d="M12 16V12M12 8H12.01" stroke={Colors.primary} strokeWidth={1.5} strokeLinecap="round" />
               </Svg>
             }
-            title="About Aura Health"
+            title="About Uzavita"
             subtitle="Version 1.0.0"
             onPress={() => navigation.navigate('About')}
           />
@@ -310,7 +310,7 @@ export function ProfileScreen() {
           loading={isLoading}
           onPress={handleLogout}
           style={styles.logoutButton}
-          accessibilityLabel="Log out of Aura Health"
+          accessibilityLabel="Log out of Uzavita"
         />
 
         <View style={styles.bottomSpacer} />

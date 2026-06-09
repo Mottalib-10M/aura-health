@@ -3,7 +3,7 @@
  *
  * A styled text input with floating label behavior, error state display,
  * optional leading/trailing icon support, and accessibility annotations.
- * Integrates with the Aura Health design system color tokens.
+ * Integrates with the Uzavita design system color tokens.
  */
 
 import React, { useState, useCallback } from 'react';

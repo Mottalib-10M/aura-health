@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health ML Service -- Production Dockerfile
+# Uzavita ML Service -- Production Dockerfile
 ###############################################################################
 # Multi-stage build for minimal image size.
 # Stage 1: Install Python dependencies
@@ -33,9 +33,9 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
 # ---------------------------------------------------------------------------
 FROM python:3.11-slim AS runtime
 
-LABEL maintainer="Aura Health Engineering <engineering@aurahealth.dev>"
-LABEL description="Aura Health AI/ML Model Serving Service"
-LABEL org.opencontainers.image.source="https://github.com/aura-health/aura-health"
+LABEL maintainer="Uzavita Engineering <engineering@uzavita.com>"
+LABEL description="Uzavita AI/ML Model Serving Service"
+LABEL org.opencontainers.image.source="https://github.com/uzavita/uzavita"
 
 # Runtime system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -46,8 +46,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
-RUN groupadd --gid 1000 aura \
-    && useradd --uid 1000 --gid aura --shell /bin/bash --create-home aura
+RUN groupadd --gid 1000 uzavita \
+    && useradd --uid 1000 --gid uzavita --shell /bin/bash --create-home uzavita
 
 # Copy virtual environment from builder
 COPY --from=builder /opt/venv /opt/venv
@@ -61,7 +61,7 @@ COPY pyproject.toml .
 COPY src/ ./src/
 
 # Create model cache directory
-RUN mkdir -p /tmp/aura-models && chown -R aura:aura /tmp/aura-models
+RUN mkdir -p /tmp/uzavita-models && chown -R uzavita:uzavita /tmp/uzavita-models
 
 # Set environment defaults
 ENV PYTHONUNBUFFERED=1 \
@@ -69,10 +69,10 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     LOG_LEVEL=INFO \
     ENVIRONMENT=production \
-    MODEL_CACHE_DIR=/tmp/aura-models
+    MODEL_CACHE_DIR=/tmp/uzavita-models
 
 # Switch to non-root user
-USER aura
+USER uzavita
 
 # Expose port
 EXPOSE 8080

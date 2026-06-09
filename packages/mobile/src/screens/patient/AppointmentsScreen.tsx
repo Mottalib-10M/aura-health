@@ -25,7 +25,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { apiClient } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
-import type { AppointmentSummary } from '@aura/shared/types/appointment';
+import type { AppointmentSummary } from '@uzavita/shared/types/appointment';
 import {
   Colors,
   Spacing,

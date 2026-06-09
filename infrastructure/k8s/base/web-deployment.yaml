@@ -1,15 +1,15 @@
 ###############################################################################
-# Aura Health - Web Frontend Deployment
+# Uzavita - Web Frontend Deployment
 ###############################################################################
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: web
     app.kubernetes.io/component: frontend
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   replicas: 5
   revisionHistoryLimit: 5
@@ -27,7 +27,7 @@ spec:
       labels:
         app.kubernetes.io/name: web
         app.kubernetes.io/component: frontend
-        app.kubernetes.io/part-of: aura-health
+        app.kubernetes.io/part-of: uzavita
     spec:
       securityContext:
         runAsNonRoot: true
@@ -48,7 +48,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
       containers:
         - name: web
-          image: aura-health/web:latest
+          image: uzavita/web:latest
           imagePullPolicy: Always
           ports:
             - name: http

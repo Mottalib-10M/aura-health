@@ -1,7 +1,7 @@
 /**
  * AppNavigator
  *
- * Root navigation structure for the Aura Health mobile app. Conditionally
+ * Root navigation structure for the Uzavita mobile app. Conditionally
  * renders the Auth stack or the Main tab navigator based on authentication
  * state. Each tab contains its own native stack navigator to enable deep
  * navigation without losing tab context.
@@ -315,7 +315,7 @@ function ProfileNavigator() {
       <ProfileStack.Screen
         name="About"
         component={PlaceholderScreen}
-        options={{ title: 'About Aura Health' }}
+        options={{ title: 'About Uzavita' }}
       />
     </ProfileStack.Navigator>
   );

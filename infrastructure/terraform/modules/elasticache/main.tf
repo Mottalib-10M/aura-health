@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - ElastiCache Redis Module
+# Uzavita - ElastiCache Redis Module
 # Redis 7 cluster mode with Multi-AZ and automatic failover
 ###############################################################################
 
@@ -112,7 +112,7 @@ variable "tags" {
 # =============================================================================
 locals {
   common_tags = merge(var.tags, {
-    Project     = "aura-health"
+    Project     = "uzavita"
     Environment = var.environment
     ManagedBy   = "terraform"
     Component   = "cache"
@@ -248,7 +248,7 @@ resource "aws_elasticache_parameter_group" "main" {
 # =============================================================================
 resource "aws_elasticache_replication_group" "main" {
   replication_group_id = var.cluster_id
-  description          = "Aura Health Redis cluster - ${var.environment}"
+  description          = "Uzavita Redis cluster - ${var.environment}"
 
   # Engine
   engine               = "redis"

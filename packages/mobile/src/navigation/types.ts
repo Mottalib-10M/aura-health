@@ -1,7 +1,7 @@
 /**
  * Navigation Type Definitions
  *
- * Strongly-typed navigation params for every screen in the Aura Health
+ * Strongly-typed navigation params for every screen in the Uzavita
  * mobile app. Using declaration merging with React Navigation's
  * RootParamList for end-to-end type safety on navigation.navigate() calls.
  */
@@ -10,7 +10,7 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
-import type { UrgencyLevel } from '@aura/shared/types/triage';
+import type { UrgencyLevel } from '@uzavita/shared/types/triage';
 
 // ---------------------------------------------------------------------------
 // Root-level stacks

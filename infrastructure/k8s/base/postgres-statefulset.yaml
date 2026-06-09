@@ -1,15 +1,15 @@
 ###############################################################################
-# Aura Health - PostgreSQL StatefulSet with TimescaleDB
+# Uzavita - PostgreSQL StatefulSet with TimescaleDB
 ###############################################################################
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   replicas: 1
   serviceName: postgres-headless
@@ -22,7 +22,7 @@ spec:
       labels:
         app.kubernetes.io/name: postgres
         app.kubernetes.io/component: database
-        app.kubernetes.io/part-of: aura-health
+        app.kubernetes.io/part-of: uzavita
     spec:
       terminationGracePeriodSeconds: 60
       securityContext:
@@ -58,15 +58,15 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: aura-secrets
+                  name: uzavita-secrets
                   key: DATABASE_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: aura-secrets
+                  name: uzavita-secrets
                   key: DATABASE_PASSWORD
             - name: POSTGRES_DB
-              value: aura_health
+              value: uzavita
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
             - name: POSTGRES_INITDB_ARGS
@@ -110,7 +110,7 @@ spec:
         name: postgres-data
         labels:
           app.kubernetes.io/name: postgres
-          app.kubernetes.io/part-of: aura-health
+          app.kubernetes.io/part-of: uzavita
       spec:
         accessModes:
           - ReadWriteOnce
@@ -124,11 +124,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-headless
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   clusterIP: None
@@ -145,11 +145,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   ports:
@@ -165,10 +165,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-config
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: postgres
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 data:
   postgresql.conf: |
     # Connection Settings

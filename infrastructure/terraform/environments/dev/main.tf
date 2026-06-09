@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - Dev Environment
+# Uzavita - Dev Environment
 # Small instance sizes for development and testing
 ###############################################################################
 
@@ -14,11 +14,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "aura-health-terraform-state"
+    bucket         = "uzavita-terraform-state"
     key            = "environments/dev/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "aura-health-terraform-locks"
+    dynamodb_table = "uzavita-terraform-locks"
   }
 }
 
@@ -30,7 +30,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "aura-health"
+      Project     = "uzavita"
       Environment = "dev"
       ManagedBy   = "terraform"
     }
@@ -52,7 +52,7 @@ variable "aws_region" {
 module "eks" {
   source = "../../modules/eks"
 
-  cluster_name        = "aura-health-dev"
+  cluster_name        = "uzavita-dev"
   environment         = "dev"
   aws_region          = var.aws_region
   vpc_cidr            = "10.0.0.0/16"
@@ -81,7 +81,7 @@ module "eks" {
 module "rds" {
   source = "../../modules/rds"
 
-  identifier         = "aura-health-dev"
+  identifier         = "uzavita-dev"
   environment        = "dev"
   vpc_id             = module.eks.vpc_id
   private_subnet_ids = module.eks.private_subnet_ids
@@ -93,8 +93,8 @@ module "rds" {
   allocated_storage     = 20
   max_allocated_storage = 50
   engine_version        = "16.3"
-  database_name         = "aura_health"
-  master_username       = "aura_admin"
+  database_name         = "uzavita"
+  master_username       = "uzavita_admin"
 
   # Single-AZ for dev (cost savings)
   multi_az = false
@@ -119,7 +119,7 @@ module "rds" {
 module "elasticache" {
   source = "../../modules/elasticache"
 
-  cluster_id         = "aura-health-dev"
+  cluster_id         = "uzavita-dev"
   environment        = "dev"
   vpc_id             = module.eks.vpc_id
   private_subnet_ids = module.eks.private_subnet_ids
@@ -150,7 +150,7 @@ module "elasticache" {
 # ECR Repositories
 # =============================================================================
 resource "aws_ecr_repository" "backend" {
-  name                 = "aura-health/backend"
+  name                 = "uzavita/backend"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -163,7 +163,7 @@ resource "aws_ecr_repository" "backend" {
 }
 
 resource "aws_ecr_repository" "web" {
-  name                 = "aura-health/web"
+  name                 = "uzavita/web"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -176,7 +176,7 @@ resource "aws_ecr_repository" "web" {
 }
 
 resource "aws_ecr_repository" "ml_service" {
-  name                 = "aura-health/ml-service"
+  name                 = "uzavita/ml-service"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -190,7 +190,7 @@ resource "aws_ecr_repository" "ml_service" {
 
 # Lifecycle policy for ECR - keep only last 10 images
 resource "aws_ecr_lifecycle_policy" "cleanup" {
-  for_each   = toset(["aura-health/backend", "aura-health/web", "aura-health/ml-service"])
+  for_each   = toset(["uzavita/backend", "uzavita/web", "uzavita/ml-service"])
   repository = each.key
 
   policy = jsonencode({

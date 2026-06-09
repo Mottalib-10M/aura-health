@@ -8,7 +8,7 @@ import {
   GET_CLARIFYING_QUESTIONS,
 } from '@/services/graphql/mutations';
 import { GET_TRIAGE_SESSION, GET_TRIAGE_HISTORY } from '@/services/graphql/queries';
-import type { TriageOutput } from '@aura/shared/types/triage';
+import type { TriageOutput } from '@uzavita/shared/types/triage';
 
 // ---------------------------------------------------------------------------
 // Types

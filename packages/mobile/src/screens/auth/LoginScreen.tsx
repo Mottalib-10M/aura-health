@@ -2,7 +2,7 @@
  * LoginScreen
  *
  * Patient-facing login screen with phone/email authentication and
- * biometric login support. Features the Aura Health logo and tagline,
+ * biometric login support. Features the Uzavita logo and tagline,
  * a country code selector for Central Asian phone numbers, and a
  * language selector at the bottom.
  */
@@ -129,7 +129,7 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
           {/* Logo & Tagline */}
           <View style={styles.logoContainer}>
             <View style={styles.logoCircle}>
-              <Svg width={48} height={48} viewBox="0 0 24 24" fill="none" accessibilityRole="image" accessibilityLabel="Aura Health logo">
+              <Svg width={48} height={48} viewBox="0 0 24 24" fill="none" accessibilityRole="image" accessibilityLabel="Uzavita logo">
                 <Path
                   d="M12 3C12 3 8 7 8 11C8 13.2091 9.79086 15 12 15C14.2091 15 16 13.2091 16 11C16 7 12 3 12 3Z"
                   fill={Colors.white}
@@ -151,7 +151,7 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
               </Svg>
             </View>
             <Text style={styles.appName} accessibilityRole="header">
-              Aura Health
+              Uzavita
             </Text>
             <Text style={styles.tagline}>
               AI-powered healthcare for Central Asia

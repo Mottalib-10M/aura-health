@@ -333,7 +333,7 @@ export async function sendNotification(payload: NotificationPayload): Promise<No
   const language = payload.language ?? 'en';
   const body = renderTemplate(payload.template, language, payload.templateData);
   const channels = resolveChannels(payload.urgency, payload.channels);
-  const subject = `Aura Health: ${payload.template.split('.').pop()?.replace(/_/g, ' ') ?? 'Notification'}`;
+  const subject = `Uzavita: ${payload.template.split('.').pop()?.replace(/_/g, ' ') ?? 'Notification'}`;
 
   logger.info(
     {

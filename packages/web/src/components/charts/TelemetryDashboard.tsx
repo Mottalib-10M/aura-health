@@ -16,7 +16,7 @@ import {
 import { Calendar, AlertTriangle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { Button } from '@/components/ui/Button';
-import type { TimeSeriesDataPoint } from '@aura/shared/types/telemetry';
+import type { TimeSeriesDataPoint } from '@uzavita/shared/types/telemetry';
 
 // ---------------------------------------------------------------------------
 // Types

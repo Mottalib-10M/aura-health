@@ -368,7 +368,7 @@ export const mutationResolvers = {
       { input }: { input: RegisterPatientInput },
     ) {
       const patientId = uuidv4();
-      // Generate a unique Aura ID: AH-<region code>-<8 random chars>
+      // Generate a unique patient ID: AH-<region code>-<8 random chars>
       const regionCode = input.region.slice(0, 3).toUpperCase();
       const randomSuffix = Math.random().toString(36).slice(2, 10).toUpperCase();
       const auraId = `AH-${regionCode}-${randomSuffix}`;

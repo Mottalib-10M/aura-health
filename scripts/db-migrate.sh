@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###############################################################################
-# Aura Health - Database Migration Runner
+# Uzavita - Database Migration Runner
 #
 # Manages database migrations for all environments.
 #
@@ -317,7 +317,7 @@ run_seed() {
 main() {
   echo ""
   echo "======================================================================"
-  echo "  Aura Health - Database Migration Runner"
+  echo "  Uzavita - Database Migration Runner"
   echo "  Environment: ${ENVIRONMENT} | Command: ${COMMAND}"
   echo "======================================================================"
   echo ""

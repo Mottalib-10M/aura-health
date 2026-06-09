@@ -30,10 +30,10 @@ export function ForgotPasswordPage() {
         {/* Logo */}
         <div className="mb-8 flex items-center justify-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600">
-            <span className="text-lg font-bold text-white">A</span>
+            <span className="text-lg font-bold text-white">U</span>
           </div>
           <span className="font-display text-2xl font-bold text-slate-900 dark:text-white">
-            Aura Health
+            Uzavita
           </span>
         </div>
 

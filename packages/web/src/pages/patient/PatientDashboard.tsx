@@ -19,7 +19,7 @@ import { useTelemetry } from '@/hooks/useTelemetry';
 import { useAuthStore } from '@/stores/authStore';
 import { formatDateTime, formatRelativeTime } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
-import type { TimeSeriesDataPoint } from '@aura/shared/types/telemetry';
+import type { TimeSeriesDataPoint } from '@uzavita/shared/types/telemetry';
 
 // ---------------------------------------------------------------------------
 // Mock data (would come from API in production)

@@ -23,14 +23,14 @@ interface StaffMember {
 }
 
 const mockStaff: StaffMember[] = [
-  { id: '1', name: 'Dr. Alisher Karimov', role: 'doctor', department: 'Emergency Medicine', status: 'on-duty', email: 'a.karimov@aura.health', phone: '+998 90 111 0001', joinDate: '2018-03-15' },
-  { id: '2', name: 'Dr. Nilufar Yusupova', role: 'doctor', department: 'Cardiology', status: 'on-duty', email: 'n.yusupova@aura.health', phone: '+998 90 111 0002', joinDate: '2019-06-01' },
-  { id: '3', name: 'Nurse Zarina Ibragimova', role: 'nurse', department: 'Emergency Medicine', status: 'on-duty', email: 'z.ibragimova@aura.health', phone: '+998 90 111 0003', joinDate: '2020-01-10' },
-  { id: '4', name: 'Dr. Sardor Rakhimov', role: 'doctor', department: 'Internal Medicine', status: 'off-duty', email: 's.rakhimov@aura.health', phone: '+998 90 111 0004', joinDate: '2017-09-20' },
-  { id: '5', name: 'Tech. Umid Tashkentov', role: 'technician', department: 'Radiology', status: 'available', email: 'u.tashkentov@aura.health', phone: '+998 90 111 0005', joinDate: '2021-04-05' },
-  { id: '6', name: 'Dr. Gulnora Sharipova', role: 'specialist', department: 'Pediatrics', status: 'on-leave', email: 'g.sharipova@aura.health', phone: '+998 90 111 0006', joinDate: '2016-11-12' },
-  { id: '7', name: 'Nurse Behzod Normatov', role: 'nurse', department: 'Surgery', status: 'on-duty', email: 'b.normatov@aura.health', phone: '+998 90 111 0007', joinDate: '2022-02-28' },
-  { id: '8', name: 'Admin Kamola Azimova', role: 'admin', department: 'Administration', status: 'available', email: 'k.azimova@aura.health', phone: '+998 90 111 0008', joinDate: '2019-08-15' },
+  { id: '1', name: 'Dr. Alisher Karimov', role: 'doctor', department: 'Emergency Medicine', status: 'on-duty', email: 'a.karimov@uzavita.com', phone: '+998 90 111 0001', joinDate: '2018-03-15' },
+  { id: '2', name: 'Dr. Nilufar Yusupova', role: 'doctor', department: 'Cardiology', status: 'on-duty', email: 'n.yusupova@uzavita.com', phone: '+998 90 111 0002', joinDate: '2019-06-01' },
+  { id: '3', name: 'Nurse Zarina Ibragimova', role: 'nurse', department: 'Emergency Medicine', status: 'on-duty', email: 'z.ibragimova@uzavita.com', phone: '+998 90 111 0003', joinDate: '2020-01-10' },
+  { id: '4', name: 'Dr. Sardor Rakhimov', role: 'doctor', department: 'Internal Medicine', status: 'off-duty', email: 's.rakhimov@uzavita.com', phone: '+998 90 111 0004', joinDate: '2017-09-20' },
+  { id: '5', name: 'Tech. Umid Tashkentov', role: 'technician', department: 'Radiology', status: 'available', email: 'u.tashkentov@uzavita.com', phone: '+998 90 111 0005', joinDate: '2021-04-05' },
+  { id: '6', name: 'Dr. Gulnora Sharipova', role: 'specialist', department: 'Pediatrics', status: 'on-leave', email: 'g.sharipova@uzavita.com', phone: '+998 90 111 0006', joinDate: '2016-11-12' },
+  { id: '7', name: 'Nurse Behzod Normatov', role: 'nurse', department: 'Surgery', status: 'on-duty', email: 'b.normatov@uzavita.com', phone: '+998 90 111 0007', joinDate: '2022-02-28' },
+  { id: '8', name: 'Admin Kamola Azimova', role: 'admin', department: 'Administration', status: 'available', email: 'k.azimova@uzavita.com', phone: '+998 90 111 0008', joinDate: '2019-08-15' },
 ];
 
 const statusConfig: Record<StaffMember['status'], { variant: 'success' | 'default' | 'warning' | 'info'; label: string }> = {

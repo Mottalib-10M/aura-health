@@ -1,7 +1,7 @@
 /**
  * API Client Service
  *
- * GraphQL client configured for the Aura Health mobile app. Handles
+ * GraphQL client configured for the Uzavita mobile app. Handles
  * auth token injection from expo-secure-store, automatic token refresh,
  * offline request queuing, and standardized error handling.
  */
@@ -9,10 +9,10 @@
 import { Platform } from 'react-native';
 import { GraphQLClient, gql } from 'graphql-request';
 import * as SecureStore from 'expo-secure-store';
-import type { LoginRequest, LoginResponse, AuthTokenPair } from '@aura/shared/types/auth';
-import type { TriageSession } from '@aura/shared/types/triage';
-import type { VitalSigns } from '@aura/shared/types/patient';
-import type { Appointment, AppointmentSummary } from '@aura/shared/types/appointment';
+import type { LoginRequest, LoginResponse, AuthTokenPair } from '@uzavita/shared/types/auth';
+import type { TriageSession } from '@uzavita/shared/types/triage';
+import type { VitalSigns } from '@uzavita/shared/types/patient';
+import type { Appointment, AppointmentSummary } from '@uzavita/shared/types/appointment';
 import type { FollowUpQuestion, FollowUpAnswer } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -21,11 +21,11 @@ import type { FollowUpQuestion, FollowUpAnswer } from '../types';
 
 const API_URL = __DEV__
   ? 'http://localhost:4000/graphql'
-  : 'https://api.aurahealth.com/graphql';
+  : 'https://api.uzavita.com/graphql';
 
 const SECURE_KEYS = {
-  ACCESS_TOKEN: 'aura_access_token',
-  REFRESH_TOKEN: 'aura_refresh_token',
+  ACCESS_TOKEN: 'uzavita_access_token',
+  REFRESH_TOKEN: 'uzavita_refresh_token',
 } as const;
 
 // ---------------------------------------------------------------------------

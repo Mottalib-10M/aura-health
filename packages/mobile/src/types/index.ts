@@ -1,7 +1,7 @@
 /**
  * Mobile Type Definitions
  *
- * Re-exports all shared types from @aura/shared and defines
+ * Re-exports all shared types from @uzavita/shared and defines
  * mobile-specific types for navigation, device interactions,
  * and local storage schemas.
  */
@@ -19,11 +19,11 @@ export type {
   BiometricVerificationRequest,
   BiometricVerificationResult,
   UserSession,
-  AuraTokenPayload,
+  UzavitaTokenPayload,
   AuthTokenPair,
   LoginRequest,
   LoginResponse,
-} from '@aura/shared/types/auth';
+} from '@uzavita/shared/types/auth';
 
 export type {
   PatientId,
@@ -39,7 +39,7 @@ export type {
   VitalSigns,
   Patient,
   PatientSummary,
-} from '@aura/shared/types/patient';
+} from '@uzavita/shared/types/patient';
 
 export type {
   UrgencyLevel,
@@ -50,7 +50,7 @@ export type {
   FollowUpProtocol,
   TriageSession,
   TriageSessionStatus,
-} from '@aura/shared/types/triage';
+} from '@uzavita/shared/types/triage';
 
 export type {
   TimeSeriesDataPoint,
@@ -61,7 +61,7 @@ export type {
   HealthRiskAssessment,
   LongitudinalOutput,
   DeviceRegistration,
-} from '@aura/shared/types/telemetry';
+} from '@uzavita/shared/types/telemetry';
 
 export type {
   AppointmentId,
@@ -72,7 +72,7 @@ export type {
   AppointmentSummary,
   CreateAppointmentRequest,
   TimeSlot,
-} from '@aura/shared/types/appointment';
+} from '@uzavita/shared/types/appointment';
 
 export type {
   DoctorId,
@@ -80,7 +80,7 @@ export type {
   DoctorAvailabilityStatus,
   Doctor,
   DoctorSummary,
-} from '@aura/shared/types/doctor';
+} from '@uzavita/shared/types/doctor';
 
 export type {
   PrescriptionId,
@@ -89,7 +89,7 @@ export type {
   PrescriptionSummary,
   PrescriptionItem,
   DrugInteraction,
-} from '@aura/shared/types/prescription';
+} from '@uzavita/shared/types/prescription';
 
 // ---------------------------------------------------------------------------
 // Mobile-Specific Types

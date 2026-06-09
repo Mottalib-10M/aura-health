@@ -1,15 +1,15 @@
 ###############################################################################
-# Aura Health - Backend API Deployment
+# Uzavita - Backend API Deployment
 ###############################################################################
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: backend
     app.kubernetes.io/component: api
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   replicas: 5
   revisionHistoryLimit: 5
@@ -27,7 +27,7 @@ spec:
       labels:
         app.kubernetes.io/name: backend
         app.kubernetes.io/component: api
-        app.kubernetes.io/part-of: aura-health
+        app.kubernetes.io/part-of: uzavita
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "4000"
@@ -63,7 +63,7 @@ spec:
                 topologyKey: topology.kubernetes.io/zone
       containers:
         - name: backend
-          image: aura-health/backend:latest
+          image: uzavita/backend:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -71,9 +71,9 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: aura-config
+                name: uzavita-config
             - secretRef:
-                name: aura-secrets
+                name: uzavita-secrets
           env:
             - name: NODE_ENV
               value: production
@@ -130,9 +130,9 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: backend-sa
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: backend
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::role/aura-backend-role
+    eks.amazonaws.com/role-arn: arn:aws:iam::role/uzavita-backend-role

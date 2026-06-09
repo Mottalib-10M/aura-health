@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - Backend API (Multi-stage build)
+# Uzavita - Backend API (Multi-stage build)
 # Node.js 22 + TypeScript
 ###############################################################################
 
@@ -47,23 +47,23 @@ ENV PORT=4000
 WORKDIR /app
 
 # Create non-root user
-RUN addgroup --system --gid 1001 aura && \
-    adduser --system --uid 1001 --ingroup aura aura
+RUN addgroup --system --gid 1001 uzavita && \
+    adduser --system --uid 1001 --ingroup uzavita uzavita
 
 # Copy only production artifacts
-COPY --from=builder --chown=aura:aura /app/node_modules ./node_modules
-COPY --from=builder --chown=aura:aura /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder --chown=aura:aura /app/packages/shared/package.json ./packages/shared/package.json
-COPY --from=builder --chown=aura:aura /app/packages/backend/dist ./packages/backend/dist
-COPY --from=builder --chown=aura:aura /app/packages/backend/package.json ./packages/backend/package.json
-COPY --from=builder --chown=aura:aura /app/packages/backend/node_modules ./packages/backend/node_modules
-COPY --from=builder --chown=aura:aura /app/package.json ./package.json
+COPY --from=builder --chown=uzavita:uzavita /app/node_modules ./node_modules
+COPY --from=builder --chown=uzavita:uzavita /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=uzavita:uzavita /app/packages/shared/package.json ./packages/shared/package.json
+COPY --from=builder --chown=uzavita:uzavita /app/packages/backend/dist ./packages/backend/dist
+COPY --from=builder --chown=uzavita:uzavita /app/packages/backend/package.json ./packages/backend/package.json
+COPY --from=builder --chown=uzavita:uzavita /app/packages/backend/node_modules ./packages/backend/node_modules
+COPY --from=builder --chown=uzavita:uzavita /app/package.json ./package.json
 
 # Copy migration files if they exist
-COPY --from=builder --chown=aura:aura /app/packages/backend/migrations ./packages/backend/migrations
+COPY --from=builder --chown=uzavita:uzavita /app/packages/backend/migrations ./packages/backend/migrations
 
 # Switch to non-root user
-USER aura
+USER uzavita
 
 # Expose API port
 EXPOSE 4000

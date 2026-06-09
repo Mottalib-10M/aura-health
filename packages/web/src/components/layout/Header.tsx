@@ -76,12 +76,12 @@ function useTheme() {
     const next = !isDark;
     setIsDark(next);
     document.documentElement.classList.toggle('dark', next);
-    localStorage.setItem('aura-theme', next ? 'dark' : 'light');
+    localStorage.setItem('uzavita-theme', next ? 'dark' : 'light');
   };
 
   // Initialize from stored preference
   useEffect(() => {
-    const stored = localStorage.getItem('aura-theme');
+    const stored = localStorage.getItem('uzavita-theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const shouldBeDark = stored === 'dark' || (!stored && prefersDark);
     setIsDark(shouldBeDark);

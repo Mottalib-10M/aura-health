@@ -1,15 +1,15 @@
 ###############################################################################
-# Aura Health - ML Service
+# Uzavita - ML Service
 ###############################################################################
 apiVersion: v1
 kind: Service
 metadata:
   name: ml-service
-  namespace: aura-health
+  namespace: uzavita
   labels:
     app.kubernetes.io/name: ml-service
     app.kubernetes.io/component: ml
-    app.kubernetes.io/part-of: aura-health
+    app.kubernetes.io/part-of: uzavita
 spec:
   type: ClusterIP
   ports:

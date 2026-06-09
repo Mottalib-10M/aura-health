@@ -57,7 +57,7 @@ export interface TelemetryDataPoint {
 // ---------------------------------------------------------------------------
 
 /**
- * Create a new patient with a generated Aura ID and RSA key pair.
+ * Create a new patient with a generated patient ID and RSA key pair.
  */
 export async function createPatient(input: PatientCreateInput): Promise<PatientRecord> {
   const patientId = uuidv4();
@@ -114,7 +114,7 @@ export async function getPatientById(id: string): Promise<PatientRecord | null> 
 }
 
 /**
- * Get a patient by their Aura ID (the public-facing identifier).
+ * Get a patient by their public-facing identifier (aura_id column).
  */
 export async function getPatientByAuraId(auraId: string): Promise<PatientRecord | null> {
   const result = await query(`SELECT * FROM patients WHERE aura_id = $1`, [auraId]);
@@ -287,7 +287,7 @@ export async function getPatientAppointments(
 // ---------------------------------------------------------------------------
 
 /**
- * Search patients by name, Aura ID, or region.
+ * Search patients by name, patient ID, or region.
  */
 export async function searchPatients(criteria: {
   nameQuery?: string;

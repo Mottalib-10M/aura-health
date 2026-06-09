@@ -339,9 +339,9 @@ export function generateIcsEvent(appointment: AppointmentRecord, doctorName: str
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Aura Health//Appointment//EN',
+    'PRODID:-//Uzavita//Appointment//EN',
     'BEGIN:VEVENT',
-    `UID:${appointment.id}@aurahealth.uz`,
+    `UID:${appointment.id}@uzavita.com`,
     `DTSTART:${formatDate(start)}`,
     `DTEND:${formatDate(end)}`,
     `SUMMARY:Medical Appointment with Dr. ${doctorName}`,

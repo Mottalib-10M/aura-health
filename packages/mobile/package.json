@@ -1,5 +1,5 @@
 {
-  "name": "@aura/mobile",
+  "name": "@uzavita/mobile",
   "version": "1.0.0",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
@@ -50,7 +50,7 @@
     "graphql": "^16.9.0",
     "zod": "^3.23.0",
     "date-fns": "^4.1.0",
-    "@aura/shared": "*"
+    "@uzavita/shared": "*"
   },
   "devDependencies": {
     "typescript": "~5.6.0",

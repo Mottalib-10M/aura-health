@@ -1,5 +1,5 @@
 ###############################################################################
-# Aura Health - EKS Cluster Module
+# Uzavita - EKS Cluster Module
 # Creates VPC, EKS cluster, managed node groups (including GPU)
 ###############################################################################
 
@@ -127,7 +127,7 @@ locals {
   azs = slice(data.aws_availability_zones.available.names, 0, 3)
 
   common_tags = merge(var.tags, {
-    Project     = "aura-health"
+    Project     = "uzavita"
     Environment = var.environment
     ManagedBy   = "terraform"
   })

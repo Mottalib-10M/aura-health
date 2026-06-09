@@ -10,7 +10,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
-import type { UserRole } from '@aura/shared/types/auth';
+import type { UserRole } from '@uzavita/shared/types/auth';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -149,7 +149,7 @@ export const useAuthStore = create<AuthState>()(
         // Check for stored access token
         try {
           const accessToken = await SecureStore.getItemAsync(
-            'aura_access_token'
+            'uzavita_access_token'
           );
 
           if (!accessToken) {
@@ -165,7 +165,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'aura-auth-store',
+      name: 'uzavita-auth-store',
       storage: secureStoreAdapter,
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,

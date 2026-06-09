@@ -14,8 +14,8 @@ const envSchema = z.object({
   // PostgreSQL
   DB_HOST: z.string().min(1).default('localhost'),
   DB_PORT: z.coerce.number().int().positive().default(5432),
-  DB_NAME: z.string().min(1).default('aura_health'),
-  DB_USER: z.string().min(1).default('aura'),
+  DB_NAME: z.string().min(1).default('uzavita'),
+  DB_USER: z.string().min(1).default('uzavita'),
   DB_PASSWORD: z.string().default(''),
 
   // Redis
@@ -53,12 +53,12 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().int().positive().default(587),
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
-  SMTP_FROM: z.string().default('noreply@aurahealth.uz'),
+  SMTP_FROM: z.string().default('noreply@uzavita.com'),
 
   // Hyperledger Fabric
   HLF_PEER_ENDPOINT: z.string().optional(),
   HLF_MSP_ID: z.string().default('Org1MSP'),
-  HLF_CHANNEL: z.string().default('aurachannel'),
+  HLF_CHANNEL: z.string().default('uzavitachannel'),
   HLF_CHAINCODE: z.string().default('audit'),
   HLF_CERT_PATH: z.string().optional(),
   HLF_KEY_PATH: z.string().optional(),

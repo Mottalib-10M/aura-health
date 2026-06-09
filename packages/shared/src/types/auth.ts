@@ -198,9 +198,9 @@ export interface UserSession {
 }
 
 /**
- * JWT token payload (claims) for Aura Health.
+ * JWT token payload (claims) for Uzavita.
  */
-export interface AuraTokenPayload {
+export interface UzavitaTokenPayload {
   sub: string; // user ID
   role: UserRole;
   institution_id?: string;

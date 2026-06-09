@@ -118,7 +118,7 @@ export function FaceCapture({
       <View style={styles.centeredContainer}>
         <Text style={styles.permissionTitle}>Camera Access Required</Text>
         <Text style={styles.permissionText}>
-          Aura Health needs camera access for biometric enrollment.
+          Uzavita needs camera access for biometric enrollment.
           This ensures your identity is securely verified.
         </Text>
         <Button

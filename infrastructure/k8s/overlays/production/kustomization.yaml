@@ -1,11 +1,11 @@
 ###############################################################################
-# Aura Health - Production Overlay
+# Uzavita - Production Overlay
 # Full replicas, production-grade resources, strict security
 ###############################################################################
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: aura-health-production
+namespace: uzavita-production
 
 namePrefix: prod-
 
@@ -22,11 +22,11 @@ patches:
   # Create production namespace
   - target:
       kind: Namespace
-      name: aura-health
+      name: uzavita
     patch: |
       - op: replace
         path: /metadata/name
-        value: aura-health-production
+        value: uzavita-production
       - op: add
         path: /metadata/labels/pod-security.kubernetes.io~1enforce
         value: restricted
@@ -205,30 +205,30 @@ patches:
   # Ingress: production hostnames
   - target:
       kind: Ingress
-      name: aura-ingress
+      name: uzavita-ingress
     patch: |
       - op: replace
         path: /spec/rules/0/host
-        value: api.aurahealth.app
+        value: api.uzavita.app
       - op: replace
         path: /spec/rules/1/host
-        value: app.aurahealth.app
+        value: app.uzavita.app
       - op: replace
         path: /spec/rules/2/host
-        value: ml.aurahealth.app
+        value: ml.uzavita.app
       - op: replace
         path: /spec/tls/0/hosts
         value:
-          - api.aurahealth.app
-          - app.aurahealth.app
-          - ml.aurahealth.app
+          - api.uzavita.app
+          - app.uzavita.app
+          - ml.uzavita.app
       - op: replace
         path: /spec/tls/0/secretName
-        value: aura-production-tls-cert
+        value: uzavita-production-tls-cert
 
 # ConfigMap overrides for production
 configMapGenerator:
-  - name: aura-config
+  - name: uzavita-config
     behavior: merge
     literals:
       - NODE_ENV=production
@@ -236,9 +236,9 @@ configMapGenerator:
       - LOG_FORMAT=json
       - GRAPHQL_PLAYGROUND=false
       - GRAPHQL_INTROSPECTION=false
-      - API_URL=https://api.aurahealth.app
-      - APP_URL=https://app.aurahealth.app
-      - CORS_ORIGINS=https://app.aurahealth.app
+      - API_URL=https://api.uzavita.app
+      - APP_URL=https://app.uzavita.app
+      - CORS_ORIGINS=https://app.uzavita.app
       - RATE_LIMIT_MAX=100
       - DATABASE_POOL_MIN=10
       - DATABASE_POOL_MAX=50
@@ -247,7 +247,7 @@ configMapGenerator:
 # Production secrets - managed externally via External Secrets Operator
 # Reference: infrastructure/terraform/modules/secrets-manager/
 secretGenerator:
-  - name: aura-secrets
+  - name: uzavita-secrets
     behavior: merge
     options:
       disableNameSuffixHash: true
@@ -255,13 +255,13 @@ secretGenerator:
       - PLACEHOLDER=managed-by-external-secrets-operator
 
 images:
-  - name: aura-health/backend
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/backend
+  - name: uzavita/backend
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/backend
     # Tag is set dynamically during deployment via CI/CD
     newTag: latest
-  - name: aura-health/web
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/web
+  - name: uzavita/web
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/web
     newTag: latest
-  - name: aura-health/ml-service
-    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/aura-health/ml-service
+  - name: uzavita/ml-service
+    newName: 123456789.dkr.ecr.us-east-1.amazonaws.com/uzavita/ml-service
     newTag: latest
