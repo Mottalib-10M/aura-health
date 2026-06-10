@@ -8,7 +8,7 @@
 -- ============================================================================
 
 -- bcrypt hash for "demo123" (12 rounds)
--- $2a$12$LJ3m4ys3Lk0TSwMBfGJ8fuJsGip.MZhBjG6GM8q.BZ3Q9ZoE2dOkG
+-- $2a$12$GB3Lr144.vYI5R3ENGEpHOtFzefdRUMzzhzCiF3/4YT6AnNadPV5e
 
 -- ── Institution ─────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ VALUES (
   0.87, 0.92, 347,
   'Tashkent',
   '["uz","ru","en"]',
-  '$2a$12$LJ3m4ys3Lk0TSwMBfGJ8fuJsGip.MZhBjG6GM8q.BZ3Q9ZoE2dOkG',
+  '$2a$12$GB3Lr144.vYI5R3ENGEpHOtFzefdRUMzzhzCiF3/4YT6AnNadPV5e',
   'demo-doctor@uzavita.com',
   NOW(), NOW()
 ) ON CONFLICT (id) DO NOTHING;
@@ -53,7 +53,7 @@ VALUES (
   '1990-05-15', 'female', 'A+',
   'Tashkent', 'Tashkent',
   'uz', true,
-  '$2a$12$LJ3m4ys3Lk0TSwMBfGJ8fuJsGip.MZhBjG6GM8q.BZ3Q9ZoE2dOkG',
+  '$2a$12$GB3Lr144.vYI5R3ENGEpHOtFzefdRUMzzhzCiF3/4YT6AnNadPV5e',
   'demo-patient@uzavita.com',
   NOW(), NOW()
 ) ON CONFLICT (id) DO NOTHING;
