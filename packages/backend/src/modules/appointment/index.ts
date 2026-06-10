@@ -73,29 +73,33 @@ async function rankDoctors(
   const targetDate = input.preferredDate ?? new Date().toISOString().slice(0, 10);
 
   // Find all verified doctors with the requested specialty in the region
+  // When a specific doctorId is provided, skip the specialty filter (the doctor is already chosen)
   let sql = `
     SELECT d.id, d.first_name, d.last_name, d.specialty, d.institution_id,
            d.efficacy_score, d.satisfaction_score,
            (SELECT COUNT(*) FROM appointments a
-            WHERE a.doctor_id = d.id AND DATE(a.scheduled_at) = $2
+            WHERE a.doctor_id = d.id AND DATE(a.scheduled_at) = $1
               AND a.status NOT IN ('CANCELLED', 'NO_SHOW')
            ) AS daily_appointment_count
     FROM doctors d
-    WHERE d.specialty = $1
-      AND d.verification_status = 'VERIFIED'
+    WHERE d.verification_status = 'VERIFIED'
   `;
-  const params: unknown[] = [input.specialty, targetDate];
-  let paramIdx = 3;
+  const params: unknown[] = [targetDate];
+  let paramIdx = 2;
+
+  if (input.doctorId) {
+    // Specific doctor requested — skip specialty filter
+    sql += ` AND d.id = $${paramIdx++}`;
+    params.push(input.doctorId);
+  } else {
+    // No specific doctor — filter by specialty
+    sql += ` AND d.specialty = $${paramIdx++}`;
+    params.push(input.specialty);
+  }
 
   if (input.institutionId) {
     sql += ` AND d.institution_id = $${paramIdx++}`;
     params.push(input.institutionId);
-  }
-
-  if (input.doctorId) {
-    // If a specific doctor is requested, still score them but give them priority
-    sql += ` AND d.id = $${paramIdx++}`;
-    params.push(input.doctorId);
   }
 
   sql += ` ORDER BY d.efficacy_score DESC NULLS LAST LIMIT 20`;
