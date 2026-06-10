@@ -14,6 +14,56 @@ export interface GraphQLContext {
 // ---------------------------------------------------------------------------
 export const queryResolvers = {
   Query: {
+    // ── Me (current user) ────────────────────────────────────────────
+    async me(_: unknown, _args: unknown, ctx: GraphQLContext) {
+      if (!ctx.user) return null;
+      const { id, role, auraId, institutionId } = ctx.user;
+
+      if (role === UserRole.PATIENT) {
+        const result = await query(`SELECT * FROM patients WHERE id = $1`, [id]);
+        const row = result.rows[0];
+        if (!row) return null;
+        return {
+          id: row.id,
+          role: 'PATIENT',
+          auraId: row.aura_id,
+          email: row.email,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          preferredLanguage: row.language ?? 'uz',
+          institutionId: null,
+        };
+      }
+
+      if (role === UserRole.DOCTOR) {
+        const result = await query(`SELECT * FROM doctors WHERE id = $1`, [id]);
+        const row = result.rows[0];
+        if (!row) return null;
+        return {
+          id: row.id,
+          role: 'DOCTOR',
+          auraId: auraId ?? null,
+          email: row.email,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          preferredLanguage: Array.isArray(row.languages) && row.languages.length > 0 ? row.languages[0] : 'uz',
+          institutionId: row.institution_id ?? institutionId ?? null,
+        };
+      }
+
+      // Fallback for admin/analyst roles
+      return {
+        id,
+        role: role.toUpperCase(),
+        auraId: auraId ?? null,
+        email: null,
+        firstName: null,
+        lastName: null,
+        preferredLanguage: 'en',
+        institutionId: institutionId ?? null,
+      };
+    },
+
     // ── Patient ──────────────────────────────────────────────────────
     async patient(_: unknown, { id }: { id: string }, ctx: GraphQLContext) {
       requireAuth(ctx.user);
@@ -64,6 +114,38 @@ export const queryResolvers = {
       sql += ` ORDER BY efficacy_score DESC NULLS LAST LIMIT 50`;
       const result = await query(sql, params);
       return result.rows.map(mapDoctorRow);
+    },
+
+    // ── Doctor's Patients ──────────────────────────────────────────────
+    async doctorPatients(
+      _: unknown,
+      { doctorId }: { doctorId: string },
+      ctx: GraphQLContext,
+    ) {
+      requireAuth(ctx.user);
+      // Return patients who have appointments with this doctor
+      const result = await query(
+        `SELECT DISTINCT p.* FROM patients p
+         INNER JOIN appointments a ON a.patient_id = p.id
+         WHERE a.doctor_id = $1
+         ORDER BY p.last_name, p.first_name
+         LIMIT 100`,
+        [doctorId],
+      );
+      return result.rows.map((row) => ({
+        id: row.id,
+        auraId: row.aura_id,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        dateOfBirth: row.date_of_birth?.toISOString?.() ?? row.date_of_birth,
+        gender: row.gender,
+        bloodType: row.blood_type,
+        region: row.region,
+        city: row.city,
+        language: row.language,
+        createdAt: (row.created_at as Date)?.toISOString(),
+        updatedAt: (row.updated_at as Date)?.toISOString(),
+      }));
     },
 
     // ── Institution ──────────────────────────────────────────────────

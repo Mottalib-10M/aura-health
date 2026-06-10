@@ -535,7 +535,7 @@ export const mutationResolvers = {
     ) {
       // Try patients first, then doctors
       let userRow = await query(
-        `SELECT id, password_hash, 'patient' AS role, aura_id FROM patients WHERE email = $1`,
+        `SELECT id, password_hash, 'patient' AS role, aura_id, first_name, last_name, email, language AS preferred_language FROM patients WHERE email = $1`,
         [input.email],
       );
 
@@ -544,7 +544,7 @@ export const mutationResolvers = {
 
       if (userRow.rows.length === 0) {
         userRow = await query(
-          `SELECT id, password_hash, 'doctor' AS role FROM doctors WHERE email = $1`,
+          `SELECT id, password_hash, 'doctor' AS role, first_name, last_name, email, institution_id, languages->0 AS preferred_language FROM doctors WHERE email = $1`,
           [input.email],
         );
         role = UserRole.DOCTOR;
@@ -600,6 +600,12 @@ export const mutationResolvers = {
           id: user.id,
           role: role === UserRole.PATIENT ? 'PATIENT' : 'DOCTOR',
           auraId,
+          email: user.email as string,
+          firstName: user.first_name as string,
+          lastName: user.last_name as string,
+          preferredLanguage: (user.preferred_language as string) ?? 'uz',
+          institutionId: (user.institution_id as string) ?? null,
+          avatarUrl: null,
         },
       };
     },

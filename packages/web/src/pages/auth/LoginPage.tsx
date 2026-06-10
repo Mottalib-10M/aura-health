@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, Fingerprint, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
@@ -147,39 +147,6 @@ export function LoginPage() {
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </form>
-
-          {/* Biometric login */}
-          <div className="mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="w-full"
-              onClick={() => {
-                /* Biometric auth integration */
-              }}
-            >
-              <Fingerprint className="h-5 w-5" aria-hidden="true" />
-              Sign in with Biometrics
-            </Button>
-          </div>
-
-          {/* Divider */}
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-            <span className="text-xs text-slate-400">or continue with</span>
-            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-          </div>
-
-          {/* Social / SSO buttons */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" type="button">
-              Government SSO
-            </Button>
-            <Button variant="outline" type="button">
-              Hospital ID
-            </Button>
-          </div>
 
           {/* Register link */}
           <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// GraphQL Query Definitions
+// GraphQL Query Definitions — aligned with backend schema
 // ---------------------------------------------------------------------------
 
 // ---- Authentication -------------------------------------------------------
@@ -8,11 +8,11 @@ export const GET_CURRENT_USER = /* GraphQL */ `
   query GetCurrentUser {
     me {
       id
+      role
+      auraId
       email
       firstName
       lastName
-      role
-      avatarUrl
       preferredLanguage
       institutionId
     }
@@ -21,420 +21,403 @@ export const GET_CURRENT_USER = /* GraphQL */ `
 
 // ---- Patient Queries ------------------------------------------------------
 
-export const GET_PATIENT_DASHBOARD = /* GraphQL */ `
-  query GetPatientDashboard($patientId: ID!) {
-    patient(id: $patientId) {
+export const GET_PATIENT = /* GraphQL */ `
+  query GetPatient($id: ID!) {
+    patient(id: $id) {
       id
+      auraId
       firstName
       lastName
-      demographic {
-        age
-        sex
-      }
-      medicalConditions {
-        name
-        status
-        severity
-      }
-      currentMedications {
-        drugName
-        dosage
-        frequency
-      }
-    }
-    patientVitals(patientId: $patientId, last: 50) {
-      heartRate { timestamp value }
-      spO2 { timestamp value }
-      hrvMs { timestamp value }
-      steps { timestamp value }
-      sleepHours { timestamp value }
-    }
-    patientAnomalies(patientId: $patientId, status: ACTIVE) {
-      id
-      metricName
-      severity
-      observedValue
-      expectedRange { min max }
-      possibleCauses
-      timestamp
-    }
-    upcomingAppointments(patientId: $patientId, limit: 5) {
-      id
-      doctorName
-      specialty
-      scheduledStart
-      scheduledEnd
-      appointmentType
-      status
-    }
-    triageHistory(patientId: $patientId, limit: 3) {
-      id
-      urgencyLevel
-      status
+      dateOfBirth
+      gender
+      bloodType
+      region
+      city
+      language
       createdAt
+      updatedAt
+      telemetrySummary {
+        latestHeartRate
+        latestSpO2
+        averageHeartRate
+        averageSpO2
+        hrvMean
+        hrvSdnn
+        lastUpdated
+      }
+      appointments {
+        id
+        doctorId
+        scheduledAt
+        durationMinutes
+        status
+        reason
+        doctor {
+          id
+          firstName
+          lastName
+          specialty
+        }
+      }
+      prescriptions {
+        id
+        doctorId
+        diagnosisCodes
+        medications {
+          drugName
+          dosage
+          frequency
+          durationDays
+          route
+          instructions
+        }
+        outcomeAssessment
+        efficacyScore
+        sideEffectsReported
+        followUpDate
+        createdAt
+        doctor {
+          id
+          firstName
+          lastName
+          specialty
+        }
+      }
+      triageHistory {
+        id
+        urgencyLevel
+        confidenceScore
+        symptoms
+        symptomDescription
+        recommendedSpecializations
+        createdAt
+      }
     }
   }
 `;
 
-export const GET_PATIENT_VITALS = /* GraphQL */ `
-  query GetPatientVitals($patientId: ID!, $from: DateTime, $to: DateTime) {
-    patientVitals(patientId: $patientId, from: $from, to: $to) {
-      heartRate { timestamp value }
-      spO2 { timestamp value }
-      hrvMs { timestamp value }
-      steps { timestamp value }
-      sleepHours { timestamp value }
-      bloodGlucose { timestamp value }
+export const GET_PATIENT_TELEMETRY = /* GraphQL */ `
+  query GetPatientTelemetry($patientId: ID!, $days: Int!) {
+    patientTelemetry(patientId: $patientId, days: $days) {
+      patientId
+      days
+      heartRateAvg
+      spO2Avg
+      readings {
+        metricType
+        value
+        recordedAt
+      }
     }
   }
 `;
 
 export const GET_PATIENT_APPOINTMENTS = /* GraphQL */ `
-  query GetPatientAppointments($patientId: ID!, $status: AppointmentStatus, $limit: Int, $offset: Int) {
-    appointments(patientId: $patientId, status: $status, limit: $limit, offset: $offset) {
-      items {
+  query GetPatientAppointments($patientId: ID!, $status: AppointmentStatus) {
+    patientAppointments(patientId: $patientId, status: $status) {
+      id
+      patientId
+      doctorId
+      institutionId
+      scheduledAt
+      durationMinutes
+      status
+      checkInCode
+      estimatedWait
+      reason
+      notes
+      createdAt
+      updatedAt
+      doctor {
         id
-        doctorId
-        doctorName
-        appointmentType
-        status
-        priority
-        scheduledStart
-        scheduledEnd
-        reasonForVisit
+        firstName
+        lastName
+        specialty
+        institutionId
       }
-      totalCount
     }
   }
 `;
 
 // ---- Triage Queries -------------------------------------------------------
 
-export const GET_TRIAGE_SESSION = /* GraphQL */ `
-  query GetTriageSession($sessionId: ID!) {
-    triageSession(id: $sessionId) {
+export const GET_TRIAGE_HISTORY = /* GraphQL */ `
+  query GetTriageHistory($patientId: ID!) {
+    triageHistory(patientId: $patientId) {
       id
       patientId
-      status
-      input {
-        symptomDescription
-        symptomDurationHours
-        severityScale
+      symptoms
+      symptomDescription
+      urgencyLevel
+      confidenceScore
+      recommendedSpecializations
+      redFlags
+      suggestedDiagnostics
+      differentialDiagnoses {
+        code
+        name
+        probability
       }
-      output {
-        urgencyLevel
-        recommendedSpecializations {
-          specialty
-          confidenceScore
-          rationale
-          estimatedWaitTimeMinutes
-        }
-        redFlags
-        suggestedDiagnostics
-        contraindications
-        epidemiologicalContext
-        followUpProtocol {
-          timeframeHours
-          escalationTriggers
-        }
-      }
-      modelVersion
+      modelUsed
+      responseLatencyMs
+      followUpScheduled
       createdAt
-      completedAt
-    }
-  }
-`;
-
-export const GET_TRIAGE_HISTORY = /* GraphQL */ `
-  query GetTriageHistory($patientId: ID!, $limit: Int, $offset: Int) {
-    triageHistory(patientId: $patientId, limit: $limit, offset: $offset) {
-      items {
+      patient {
         id
-        urgencyLevel
-        status
-        output {
-          urgencyLevel
-          recommendedSpecializations {
-            specialty
-            confidenceScore
-          }
-        }
-        createdAt
+        firstName
+        lastName
       }
-      totalCount
     }
   }
 `;
 
 // ---- Doctor Queries -------------------------------------------------------
 
-export const GET_DOCTOR_DASHBOARD = /* GraphQL */ `
-  query GetDoctorDashboard($doctorId: ID!, $date: Date!) {
-    doctor(id: $doctorId) {
+export const GET_DOCTOR = /* GraphQL */ `
+  query GetDoctor($id: ID!) {
+    doctor(id: $id) {
       id
       firstName
       lastName
-      primarySpecialty
-      performanceMetrics {
-        patientSatisfactionScore
-        averageConsultationMinutes
-        totalConsultations30d
-      }
-    }
-    doctorSchedule(doctorId: $doctorId, date: $date) {
-      appointments {
-        id
-        patientId
-        patientName
-        patientAge
-        scheduledStart
-        scheduledEnd
-        reasonForVisit
-        priority
-        status
-        triageSummary {
-          urgencyLevel
-          recommendedSpecializations
-        }
-        vitalSnapshot {
-          heartRate
-          spO2
-          temperature
-        }
-      }
-    }
-    doctorStats(doctorId: $doctorId) {
-      patientsToday
-      avgConsultationTime
+      licenseNumber
+      specialty
+      subspecialty
+      institutionId
+      verificationStatus
+      efficacyScore
       satisfactionScore
-      pendingFollowUps
+      consultationCount
+      region
+      languages
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const GET_DOCTOR_APPOINTMENTS = /* GraphQL */ `
+  query GetDoctorAppointments($doctorId: ID!, $date: String) {
+    doctorAppointments(doctorId: $doctorId, date: $date) {
+      id
+      patientId
+      doctorId
+      institutionId
+      scheduledAt
+      durationMinutes
+      status
+      reason
+      notes
+      createdAt
+      patient {
+        id
+        firstName
+        lastName
+        dateOfBirth
+        gender
+        bloodType
+        region
+        city
+      }
+    }
+  }
+`;
+
+export const GET_DOCTOR_SCHEDULE = /* GraphQL */ `
+  query GetDoctorSchedule($doctorId: ID!, $date: String!) {
+    doctorSchedule(doctorId: $doctorId, date: $date) {
+      startTime
+      endTime
+      isAvailable
     }
   }
 `;
 
 export const GET_DOCTOR_PATIENTS = /* GraphQL */ `
-  query GetDoctorPatients($doctorId: ID!, $search: String, $limit: Int, $offset: Int) {
-    doctorPatients(doctorId: $doctorId, search: $search, limit: $limit, offset: $offset) {
-      items {
+  query GetDoctorPatients($doctorId: ID!) {
+    doctorPatients(doctorId: $doctorId) {
+      id
+      auraId
+      firstName
+      lastName
+      dateOfBirth
+      gender
+      bloodType
+      region
+      city
+      language
+      createdAt
+      telemetrySummary {
+        latestHeartRate
+        latestSpO2
+        averageHeartRate
+        averageSpO2
+        lastUpdated
+      }
+      appointments {
         id
-        firstName
-        lastName
-        age
-        sex
-        lastVisitDate
-        activeConditionsCount
-        riskScore
+        scheduledAt
+        status
+        reason
       }
-      totalCount
+      prescriptions {
+        id
+        diagnosisCodes
+        medications {
+          drugName
+          dosage
+          frequency
+        }
+        createdAt
+      }
+      triageHistory {
+        id
+        urgencyLevel
+        confidenceScore
+        symptoms
+        createdAt
+      }
     }
   }
 `;
 
-export const GET_PRESCRIPTION_EFFICACY = /* GraphQL */ `
-  query GetPrescriptionEfficacy($doctorId: ID!, $drugName: String, $diagnosisCode: String, $from: Date, $to: Date) {
-    prescriptionEfficacy(doctorId: $doctorId, drugName: $drugName, diagnosisCode: $diagnosisCode, from: $from, to: $to) {
-      items {
-        drugName
-        diagnosisCode
-        diagnosisName
-        cohortSize
-        resolutionRate
-        averageTimeToImprovementDays
-        confidenceInterval { lower upper }
-        comparisonVsFirstLine { difference pValue }
-        comparisonVsRegionalAvg { difference pValue }
-        trend { timestamp value }
-      }
-      totalCount
+export const GET_DOCTORS_BY_SPECIALTY = /* GraphQL */ `
+  query GetDoctorsBySpecialty($specialty: String!, $region: String) {
+    doctorsBySpecialty(specialty: $specialty, region: $region) {
+      id
+      firstName
+      lastName
+      specialty
+      subspecialty
+      efficacyScore
+      satisfactionScore
+      consultationCount
+      region
+      languages
     }
   }
 `;
 
-// ---- Hospital Queries -----------------------------------------------------
+// ---- Efficacy / Prescriptions -------------------------------------------
 
-export const GET_HOSPITAL_DASHBOARD = /* GraphQL */ `
-  query GetHospitalDashboard($institutionId: ID!) {
-    institution(id: $institutionId) {
+export const GET_EFFICACY_METRICS = /* GraphQL */ `
+  query GetEfficacyMetrics($drugName: String, $diagnosisCode: String) {
+    efficacyMetrics(drugName: $drugName, diagnosisCode: $diagnosisCode) {
+      id
+      drugName
+      dosage
+      diagnosisCode
+      cohortSize
+      outcomeMetrics {
+        remissionRate
+        averageDaysToImprovement
+        sideEffectRate
+        readmissionRate
+        patientSatisfaction
+      }
+      comparativeEffectiveness
+      region
+      timeframeMonths
+      lastUpdated
+    }
+  }
+`;
+
+// ---- Institution Queries ------------------------------------------------
+
+export const GET_INSTITUTION = /* GraphQL */ `
+  query GetInstitution($id: ID!) {
+    institution(id: $id) {
       id
       name
       type
-      status
-      metrics {
-        currentPatientCount
-        emergencyQueueLength
-        averageWaitTimeMinutes
-        bedOccupancyRate
-        staffOnDuty
-        ambulancesAvailable
-      }
-      bedCapacity {
-        wardType
-        totalBeds
-        occupiedBeds
-        availableBeds
-        reservedBeds
-      }
-      departments {
-        id
-        name
-        specialty
-        isActive
-      }
-    }
-    hospitalKpis(institutionId: $institutionId) {
-      occupancyPercent
-      staffingRatio
-      revenueMonth
-      revenueTrend { timestamp value }
-      patientSatisfaction
-      avgLengthOfStay
-    }
-    aiRecommendations(institutionId: $institutionId) {
-      id
-      type
-      title
-      description
-      priority
-      estimatedImpact
+      tier
+      region
+      city
+      latitude
+      longitude
+      bedCapacity
+      currentOccupancy
+      specialties
+      equipment
       createdAt
+      updatedAt
     }
   }
 `;
 
-// ---- Surveillance / Analyst Queries ---------------------------------------
-
-export const GET_SURVEILLANCE_DASHBOARD = /* GraphQL */ `
-  query GetSurveillanceDashboard($region: String, $dateFrom: Date, $dateTo: Date) {
-    outbreakSummaries(region: $region, dateFrom: $dateFrom, dateTo: $dateTo) {
+export const GET_INSTITUTIONS = /* GraphQL */ `
+  query GetInstitutions($region: String, $type: InstitutionType, $tier: InstitutionTier) {
+    institutions(region: $region, type: $type, tier: $tier) {
       id
+      name
+      type
+      tier
+      region
+      city
+      bedCapacity
+      currentOccupancy
+      specialties
+    }
+  }
+`;
+
+// ---- Surveillance / Analyst Queries -------------------------------------
+
+export const GET_SURVEILLANCE_DATA = /* GraphQL */ `
+  query GetSurveillanceData($region: String!, $dateRange: DateRangeInput) {
+    surveillanceData(region: $region, dateRange: $dateRange) {
+      id
+      region
+      city
+      diseaseCode
+      diseaseName
+      caseCount
+      deathCount
+      recoveredCount
+      testPositivityRate
+      alertLevel
+      reportDate
+      dataSource
+    }
+  }
+`;
+
+export const GET_OUTBREAK_ALERTS = /* GraphQL */ `
+  query GetOutbreakAlerts($region: String) {
+    outbreakAlerts(region: $region) {
+      id
+      region
+      city
+      diseaseCode
       diseaseName
       alertLevel
-      status
-      totalCases
-      affectedRegionsCount
+      caseCount
       growthRate
-      lastUpdated
-    }
-    alertLevelCounts(region: $region) {
-      watch
-      warning
-      alert
-      emergency
-    }
-    diseaseHeatmap(region: $region, dateFrom: $dateFrom, dateTo: $dateTo) {
-      features {
-        coordinates { latitude longitude }
-        caseCount
-        diseaseName
-        alertLevel
-      }
-    }
-    populationHealthKpis(region: $region) {
-      incidenceRate
-      mortalityRate
-      vaccinationCoverage
-      surveillanceCoverage
-      reportingCompleteness
+      detectionMethod
+      message
+      recommendations
+      isActive
+      declaredAt
+      resolvedAt
     }
   }
 `;
 
-export const GET_OUTBREAK_DETAILS = /* GraphQL */ `
-  query GetOutbreakDetails($outbreakId: ID!) {
-    outbreak(id: $outbreakId) {
+export const GET_SUPPLY_FORECAST = /* GraphQL */ `
+  query GetSupplyForecast($pharmaceuticalId: String!) {
+    supplyForecast(pharmaceuticalId: $pharmaceuticalId) {
       id
-      diseaseName
-      icd10Code
-      pathogenType
-      alertLevel
-      status
-      totalCases
-      totalDeaths
-      caseFatalityRate
-      reproductiveNumber
-      clusters {
-        region
-        city
-        caseCount
-        firstCaseDate
-        latestCaseDate
-        growthRate
-        coordinates { latitude longitude }
-      }
-      affectedRegions
-      containmentMeasures
-      firstReported
-      lastUpdated
-      whoNotified
-      notes
-    }
-    outbreakTimeSeries(outbreakId: $outbreakId) {
-      daily {
-        date
-        newCases
-        cumulativeCases
-        newDeaths
-      }
-    }
-  }
-`;
-
-export const GET_SUPPLY_CHAIN = /* GraphQL */ `
-  query GetSupplyChain($region: String, $stockLevel: StockLevel, $minCriticality: Float) {
-    supplyForecasts(region: $region, stockLevel: $stockLevel, minCriticality: $minCriticality) {
-      items {
-        pharmaceuticalId
-        drugName
-        currentStock {
-          units
-          daysOfSupplyRemaining
-          warehouseDistribution
-        }
-        demandForecast {
-          model
-          horizonMonths
-          predictions { month units confidence }
-        }
-        riskAssessment {
-          stockoutProbability
-          criticalityScore
-          alternativeAvailability
-        }
-        recommendedOrders {
-          supplier
-          quantity
-          orderDate
-          estimatedDelivery
-        }
-      }
-      totalCount
-    }
-    regionalSupplyStatus(region: $region) {
-      items {
-        pharmaceuticalId
-        drugName
-        region
-        stockLevel
-        daysRemaining
-      }
-    }
-  }
-`;
-
-export const GET_OUTBREAK_TRENDS = /* GraphQL */ `
-  query GetOutbreakTrends($diseaseName: String!, $region: String, $from: Date!, $to: Date!) {
-    outbreakTrends(diseaseName: $diseaseName, region: $region, from: $from, to: $to) {
-      timeSeries {
-        date
-        newCases
-        cumulativeCases
-        movingAverage7d
-        threshold
-      }
-      alertLevels {
-        date
-        level
-      }
+      pharmaceuticalId
+      pharmaceuticalName
+      region
+      currentStock
+      dailyConsumptionRate
+      forecastedDemand
+      daysUntilStockout
+      reorderPoint
+      suggestedOrderQuantity
+      confidence
+      forecastDate
     }
   }
 `;

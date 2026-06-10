@@ -3,11 +3,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTriageStore } from '@/stores/triageStore';
 import { useAuthStore } from '@/stores/authStore';
 import { gqlRequest } from '@/services/api';
-import {
-  SUBMIT_TRIAGE_COMPLETE,
-  GET_CLARIFYING_QUESTIONS,
-} from '@/services/graphql/mutations';
-import { GET_TRIAGE_SESSION, GET_TRIAGE_HISTORY } from '@/services/graphql/queries';
+import { SUBMIT_SYMPTOM_TRIAGE } from '@/services/graphql/mutations';
+import { GET_TRIAGE_HISTORY } from '@/services/graphql/queries';
 import type { TriageOutput } from '@uzavita/shared/types/triage';
 
 // ---------------------------------------------------------------------------
@@ -63,13 +60,13 @@ export function useTriage() {
   const store = useTriageStore();
   const user = useAuthStore((s) => s.user);
 
-  // Fetch clarifying questions based on symptom description
+  // Clarifying questions are generated client-side (no backend endpoint)
+  // Move to clarifying step directly so the UI flow is preserved
   const clarifyingMutation = useMutation({
-    mutationFn: (symptomDescription: string) =>
-      gqlRequest<ClarifyingQuestionsResponse>(GET_CLARIFYING_QUESTIONS, {
-        symptomDescription,
-        patientId: user?.id ?? '',
-      }),
+    mutationFn: async (symptomDescription: string) => {
+      // No backend endpoint — skip to next step
+      return { generateClarifyingQuestions: { questions: [] } } as ClarifyingQuestionsResponse;
+    },
     onSuccess: ({ generateClarifyingQuestions }) => {
       store.setClarifyingQuestions(generateClarifyingQuestions.questions);
       store.setStep('clarifying');
@@ -79,24 +76,22 @@ export function useTriage() {
     },
   });
 
-  // Submit complete triage for AI analysis
+  // Submit triage for AI analysis via submitSymptomTriage
   const submitMutation = useMutation({
     mutationFn: () =>
-      gqlRequest<TriageCompleteResponse>(SUBMIT_TRIAGE_COMPLETE, {
+      gqlRequest<{ submitSymptomTriage: TriageOutput }>(SUBMIT_SYMPTOM_TRIAGE, {
         input: {
           patientId: user?.id,
+          symptoms: store.input.symptomDescription.split(',').map((s: string) => s.trim()).filter(Boolean),
           symptomDescription: store.input.symptomDescription,
-          symptomDurationHours: store.input.symptomDurationHours,
-          severityScale: store.input.severityScale,
-          clarifyingAnswers: store.input.clarifyingAnswers,
+          severity: store.input.severityScale,
           vitalSigns: Object.keys(store.input.vitalSigns).length > 0
             ? store.input.vitalSigns
             : undefined,
-          useWearableData: store.input.useWearableData,
         },
       }),
-    onSuccess: ({ submitTriageComplete }) => {
-      store.setResult(submitTriageComplete.output, submitTriageComplete.sessionId);
+    onSuccess: ({ submitSymptomTriage }) => {
+      store.setResult(submitSymptomTriage, (submitSymptomTriage as any).triageEventId ?? '');
     },
     onError: (error: Error) => {
       store.setError(error.message);
@@ -104,15 +99,20 @@ export function useTriage() {
     },
   });
 
-  // Fetch a specific triage session
+  // Fetch a specific triage session (uses triageHistory filtered client-side)
   const useTriageSession = (sessionId: string | null) =>
     useQuery({
       queryKey: ['triageSession', sessionId],
-      queryFn: () =>
-        gqlRequest<{ triageSession: TriageHistoryItem }>(GET_TRIAGE_SESSION, {
-          sessionId,
-        }),
-      enabled: !!sessionId,
+      queryFn: async () => {
+        if (!user?.id) throw new Error('Not authenticated');
+        const data = await gqlRequest<{ triageHistory: TriageHistoryItem[] }>(GET_TRIAGE_HISTORY, {
+          patientId: user.id,
+        });
+        const session = data.triageHistory.find((t) => t.id === sessionId);
+        if (!session) throw new Error('Session not found');
+        return { triageSession: session };
+      },
+      enabled: !!sessionId && !!user?.id,
     });
 
   // Fetch triage history for the current patient

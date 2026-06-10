@@ -1,43 +1,58 @@
 // ---------------------------------------------------------------------------
-// GraphQL Mutation Definitions
+// GraphQL Mutation Definitions — aligned with backend schema
 // ---------------------------------------------------------------------------
 
 // ---- Authentication -------------------------------------------------------
 
 export const LOGIN = /* GraphQL */ `
   mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
+    login(input: { email: $email, password: $password }) {
+      token
+      refreshToken
       user {
         id
+        role
+        auraId
         email
         firstName
         lastName
-        role
-        avatarUrl
         preferredLanguage
         institutionId
       }
-      token
-      refreshToken
-      expiresAt
     }
   }
 `;
 
-export const REGISTER = /* GraphQL */ `
-  mutation Register($input: RegisterInput!) {
-    register(input: $input) {
+export const REGISTER_PATIENT = /* GraphQL */ `
+  mutation RegisterPatient($input: RegisterPatientInput!) {
+    registerPatient(input: $input) {
+      token
+      refreshToken
       user {
         id
+        role
+        auraId
         email
         firstName
         lastName
-        role
         preferredLanguage
       }
+    }
+  }
+`;
+
+export const REGISTER_DOCTOR = /* GraphQL */ `
+  mutation RegisterDoctor($input: RegisterDoctorInput!) {
+    registerDoctor(input: $input) {
       token
       refreshToken
-      expiresAt
+      user {
+        id
+        role
+        email
+        firstName
+        lastName
+      }
     }
   }
 `;
@@ -47,66 +62,35 @@ export const REFRESH_TOKEN = /* GraphQL */ `
     refreshToken(refreshToken: $refreshToken) {
       token
       refreshToken
-      expiresAt
-    }
-  }
-`;
-
-export const LOGOUT = /* GraphQL */ `
-  mutation Logout {
-    logout {
-      success
+      user {
+        id
+        role
+        auraId
+      }
     }
   }
 `;
 
 // ---- Triage ---------------------------------------------------------------
 
-export const SUBMIT_TRIAGE = /* GraphQL */ `
-  mutation SubmitTriage($input: TriageInput!) {
-    submitTriage(input: $input) {
-      sessionId
-      status
-    }
-  }
-`;
-
-export const GET_CLARIFYING_QUESTIONS = /* GraphQL */ `
-  mutation GetClarifyingQuestions($symptomDescription: String!, $patientId: ID!) {
-    generateClarifyingQuestions(symptomDescription: $symptomDescription, patientId: $patientId) {
-      questions {
-        id
-        question
-        type
-        options
+export const SUBMIT_SYMPTOM_TRIAGE = /* GraphQL */ `
+  mutation SubmitSymptomTriage($input: SymptomTriageInput!) {
+    submitSymptomTriage(input: $input) {
+      triageEventId
+      urgencyLevel
+      confidenceScore
+      recommendedSpecializations
+      redFlags
+      suggestedDiagnostics
+      differentialDiagnoses {
+        code
+        name
+        probability
       }
-    }
-  }
-`;
-
-export const SUBMIT_TRIAGE_COMPLETE = /* GraphQL */ `
-  mutation SubmitTriageComplete($input: TriageCompleteInput!) {
-    submitTriageComplete(input: $input) {
-      sessionId
-      output {
-        urgencyLevel
-        recommendedSpecializations {
-          specialty
-          confidenceScore
-          rationale
-          estimatedWaitTimeMinutes
-        }
-        redFlags
-        suggestedDiagnostics
-        contraindications
-        epidemiologicalContext
-        followUpProtocol {
-          timeframeHours
-          escalationTriggers
-        }
-      }
-      modelVersion
-      inferenceLatencyMs
+      patientGuidance
+      followUpRecommended
+      modelUsed
+      responseLatencyMs
     }
   }
 `;
@@ -116,125 +100,134 @@ export const SUBMIT_TRIAGE_COMPLETE = /* GraphQL */ `
 export const CREATE_APPOINTMENT = /* GraphQL */ `
   mutation CreateAppointment($input: CreateAppointmentInput!) {
     createAppointment(input: $input) {
-      id
-      patientId
-      doctorId
-      appointmentType
-      status
-      priority
-      scheduledStart
-      scheduledEnd
-      reasonForVisit
+      appointment {
+        id
+        patientId
+        doctorId
+        institutionId
+        scheduledAt
+        durationMinutes
+        status
+        checkInCode
+        reason
+        createdAt
+      }
+      alternativeSlots {
+        startTime
+        endTime
+        isAvailable
+      }
+      estimatedWaitMinutes
     }
   }
 `;
 
 export const CANCEL_APPOINTMENT = /* GraphQL */ `
-  mutation CancelAppointment($appointmentId: ID!, $reason: String!) {
+  mutation CancelAppointment($appointmentId: ID!, $reason: String) {
     cancelAppointment(appointmentId: $appointmentId, reason: $reason) {
       id
       status
+      notes
+      updatedAt
     }
   }
 `;
 
-export const RESCHEDULE_APPOINTMENT = /* GraphQL */ `
-  mutation RescheduleAppointment($input: RescheduleAppointmentInput!) {
-    rescheduleAppointment(input: $input) {
+export const CHECK_IN_APPOINTMENT = /* GraphQL */ `
+  mutation CheckInAppointment($appointmentId: ID!, $checkInCode: String!) {
+    checkInAppointment(appointmentId: $appointmentId, checkInCode: $checkInCode) {
       id
-      scheduledStart
-      scheduledEnd
       status
+      updatedAt
+    }
+  }
+`;
+
+// ---- Prescriptions --------------------------------------------------------
+
+export const RECORD_PRESCRIPTION_OUTCOME = /* GraphQL */ `
+  mutation RecordPrescriptionOutcome($input: RecordPrescriptionOutcomeInput!) {
+    recordPrescriptionOutcome(input: $input) {
+      id
+      outcomeAssessment
+      efficacyScore
+      sideEffectsReported
+      followUpDate
+      updatedAt
+    }
+  }
+`;
+
+// ---- Patient Profile ------------------------------------------------------
+
+export const UPDATE_PATIENT_PROFILE = /* GraphQL */ `
+  mutation UpdatePatientProfile($input: UpdatePatientInput!) {
+    updatePatientProfile(input: $input) {
+      id
+      auraId
+      firstName
+      lastName
+      dateOfBirth
+      gender
+      bloodType
+      region
+      city
+      language
+      updatedAt
     }
   }
 `;
 
 // ---- Telemetry ------------------------------------------------------------
 
-export const REGISTER_DEVICE = /* GraphQL */ `
-  mutation RegisterDevice($input: DeviceRegistrationInput!) {
-    registerDevice(input: $input) {
-      deviceId
-      deviceType
-      status
-    }
+export const INGEST_TELEMETRY = /* GraphQL */ `
+  mutation IngestTelemetry($input: TelemetryInput!) {
+    ingestTelemetry(input: $input)
   }
 `;
 
-export const SYNC_WEARABLE_DATA = /* GraphQL */ `
-  mutation SyncWearableData($patientId: ID!, $deviceId: String!) {
-    syncWearableData(patientId: $patientId, deviceId: $deviceId) {
-      syncedMetrics
-      lastSyncedAt
-      dataPointsCount
-    }
-  }
-`;
-
-// ---- Doctor Actions -------------------------------------------------------
-
-export const UPDATE_APPOINTMENT_NOTES = /* GraphQL */ `
-  mutation UpdateAppointmentNotes($appointmentId: ID!, $notes: AppointmentNotesInput!) {
-    updateAppointmentNotes(appointmentId: $appointmentId, notes: $notes) {
-      id
-      notes {
-        chiefComplaint
-        clinicalNotes
-        diagnosisCodes
-        followUpRequired
+export const ANALYZE_LONGITUDINAL_HEALTH = /* GraphQL */ `
+  mutation AnalyzeLongitudinalHealth($patientId: ID!, $windowDays: Int!) {
+    analyzeLongitudinalHealth(patientId: $patientId, windowDays: $windowDays) {
+      patientId
+      windowDays
+      trends {
+        metric
+        values
+        dates
+        trend
       }
+      summary
     }
   }
 `;
 
-export const OVERRIDE_TRIAGE = /* GraphQL */ `
-  mutation OverrideTriage($sessionId: ID!, $override: TriageOverrideInput!, $reason: String!) {
-    overrideTriage(sessionId: $sessionId, override: $override, reason: $reason) {
+// ---- Doctor Schedule ------------------------------------------------------
+
+export const MANAGE_DOCTOR_SCHEDULE = /* GraphQL */ `
+  mutation ManageDoctorSchedule($input: ScheduleInput!) {
+    manageDoctorSchedule(input: $input)
+  }
+`;
+
+// ---- Admin ----------------------------------------------------------------
+
+export const UPDATE_VERIFICATION_STATUS = /* GraphQL */ `
+  mutation UpdateVerificationStatus($input: UpdateVerificationStatusInput!) {
+    updateVerificationStatus(input: $input) {
       id
-      status
-      doctorOverride {
-        urgencyLevel
-        recommendedSpecializations {
-          specialty
-          confidenceScore
-        }
-      }
+      firstName
+      lastName
+      verificationStatus
+      updatedAt
     }
   }
 `;
 
-// ---- Hospital Actions -----------------------------------------------------
+// ---- Surveillance ---------------------------------------------------------
 
-export const UPDATE_BED_AVAILABILITY = /* GraphQL */ `
-  mutation UpdateBedAvailability($institutionId: ID!, $wardType: String!, $updates: BedUpdateInput!) {
-    updateBedAvailability(institutionId: $institutionId, wardType: $wardType, updates: $updates) {
-      wardType
-      totalBeds
-      occupiedBeds
-      availableBeds
-    }
-  }
-`;
-
-// ---- Surveillance Actions -------------------------------------------------
-
-export const REPORT_DISEASE_CASE = /* GraphQL */ `
-  mutation ReportDiseaseCase($input: DiseaseCaseInput!) {
-    reportDiseaseCase(input: $input) {
-      id
-      outbreakId
-      diseaseName
-      reportedAt
-    }
-  }
-`;
-
-export const UPDATE_OUTBREAK_STATUS = /* GraphQL */ `
-  mutation UpdateOutbreakStatus($outbreakId: ID!, $status: OutbreakStatus!, $notes: String) {
-    updateOutbreakStatus(outbreakId: $outbreakId, status: $status, notes: $notes) {
-      id
-      status
-      lastUpdated
-    }
+export const INGEST_SURVEILLANCE_DATA = /* GraphQL */ `
+  mutation IngestSurveillanceData($input: SurveillanceInput!) {
+    ingestSurveillanceData(input: $input)
   }
 `;

@@ -6,7 +6,8 @@
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS "timescaledb" CASCADE;
+-- TimescaleDB not available on all providers; skip if absent
+-- CREATE EXTENSION IF NOT EXISTS "timescaledb" CASCADE;
 
 -- ============================================================================
 -- ENUM TYPES
@@ -239,11 +240,11 @@ CREATE TABLE biometric_telemetry (
   PRIMARY KEY (id, recorded_at)
 );
 
--- Convert to TimescaleDB hypertable (partitioned by recorded_at)
-SELECT create_hypertable('biometric_telemetry', 'recorded_at',
-  chunk_time_interval => INTERVAL '1 day',
-  if_not_exists => TRUE
-);
+-- TimescaleDB hypertable conversion (skipped — not available on all providers)
+-- SELECT create_hypertable('biometric_telemetry', 'recorded_at',
+--   chunk_time_interval => INTERVAL '1 day',
+--   if_not_exists => TRUE
+-- );
 
 CREATE INDEX idx_telemetry_patient_time ON biometric_telemetry (patient_id, recorded_at DESC);
 CREATE INDEX idx_telemetry_metric ON biometric_telemetry (patient_id, metric_type, recorded_at DESC);
@@ -316,10 +317,11 @@ CREATE TABLE surveillance_data (
   PRIMARY KEY (id, report_date)
 );
 
-SELECT create_hypertable('surveillance_data', 'report_date',
-  chunk_time_interval => INTERVAL '7 days',
-  if_not_exists => TRUE
-);
+-- TimescaleDB hypertable conversion (skipped — not available on all providers)
+-- SELECT create_hypertable('surveillance_data', 'report_date',
+--   chunk_time_interval => INTERVAL '7 days',
+--   if_not_exists => TRUE
+-- );
 
 CREATE INDEX idx_surveillance_region ON surveillance_data (region, report_date DESC);
 CREATE INDEX idx_surveillance_disease ON surveillance_data (disease_code, report_date DESC);
@@ -373,7 +375,7 @@ CREATE TABLE appointments (
 CREATE INDEX idx_appointments_patient ON appointments (patient_id, scheduled_at DESC);
 CREATE INDEX idx_appointments_doctor ON appointments (doctor_id, scheduled_at);
 CREATE INDEX idx_appointments_status ON appointments (status, scheduled_at);
-CREATE INDEX idx_appointments_date ON appointments (DATE(scheduled_at), doctor_id);
+CREATE INDEX idx_appointments_date ON appointments (scheduled_at, doctor_id);
 
 -- Appointment reminders (for background worker)
 CREATE TABLE appointment_reminders (

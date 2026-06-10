@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore, type UserRole } from '@/stores/authStore';
 import { gqlRequest } from '@/services/api';
-import { LOGIN, REGISTER, REFRESH_TOKEN, LOGOUT } from '@/services/graphql/mutations';
+import { LOGIN, REGISTER_PATIENT, REFRESH_TOKEN } from '@/services/graphql/mutations';
 import { GET_CURRENT_USER } from '@/services/graphql/queries';
 
 // ---------------------------------------------------------------------------
@@ -75,8 +75,9 @@ export function useAuth() {
     mutationFn: (variables: LoginVariables) =>
       gqlRequest<{ login: AuthResponse }>(LOGIN, { ...variables }),
     onSuccess: ({ login }) => {
-      store.login(login.user, login.token, login.refreshToken);
-      navigate(ROLE_ROUTES[login.user.role] ?? '/');
+      const user = { ...login.user, role: login.user.role.toLowerCase() as UserRole };
+      store.login(user, login.token, login.refreshToken);
+      navigate(ROLE_ROUTES[user.role] ?? '/');
     },
     onError: (error: Error) => {
       store.setError(error.message);
@@ -86,10 +87,11 @@ export function useAuth() {
   // Register mutation
   const registerMutation = useMutation({
     mutationFn: (variables: RegisterVariables) =>
-      gqlRequest<{ register: AuthResponse }>(REGISTER, { input: variables }),
-    onSuccess: ({ register }) => {
-      store.login(register.user, register.token, register.refreshToken);
-      navigate(ROLE_ROUTES[register.user.role] ?? '/');
+      gqlRequest<{ registerPatient: AuthResponse }>(REGISTER_PATIENT, { input: variables }),
+    onSuccess: ({ registerPatient }) => {
+      const user = { ...registerPatient.user, role: registerPatient.user.role.toLowerCase() as UserRole };
+      store.login(user, registerPatient.token, registerPatient.refreshToken);
+      navigate(ROLE_ROUTES[user.role] ?? '/');
     },
     onError: (error: Error) => {
       store.setError(error.message);
@@ -114,17 +116,11 @@ export function useAuth() {
     },
   });
 
-  // Logout
-  const logout = useCallback(async () => {
-    try {
-      await gqlRequest(LOGOUT);
-    } catch {
-      // Proceed with local logout even if server call fails
-    } finally {
-      store.logout();
-      queryClient.clear();
-      navigate('/login');
-    }
+  // Logout (client-side only — backend has no logout mutation)
+  const logout = useCallback(() => {
+    store.logout();
+    queryClient.clear();
+    navigate('/login');
   }, [store, queryClient, navigate]);
 
   // Login helper

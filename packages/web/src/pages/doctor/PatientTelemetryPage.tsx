@@ -1,75 +1,25 @@
 import { useState, useMemo } from 'react';
-import { User, Activity, AlertTriangle } from 'lucide-react';
-import { TelemetryDashboard, type TelemetryData, type AnomalyPoint } from '@/components/charts/TelemetryDashboard';
+import { useSearchParams } from 'react-router-dom';
+import { Activity, AlertTriangle } from 'lucide-react';
+import { TelemetryDashboard, type TelemetryData } from '@/components/charts/TelemetryDashboard';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
+import { useAuthStore } from '@/stores/authStore';
+import { usePatients, type PatientRow } from '@/hooks/usePatients';
+import { useTelemetry } from '@/hooks/useTelemetry';
 
 // ---------------------------------------------------------------------------
-// Mock Data
+// Helpers
 // ---------------------------------------------------------------------------
 
-interface PatientOption {
-  id: string;
-  name: string;
-  age: number;
-  lastSync: string;
-  hasAnomalies: boolean;
-}
-
-const mockPatientList: PatientOption[] = [
-  { id: '1', name: 'Aziz Rakhimov', age: 45, lastSync: '5 min ago', hasAnomalies: true },
-  { id: '2', name: 'Malika Karimova', age: 32, lastSync: '1 hour ago', hasAnomalies: false },
-  { id: '3', name: 'Javlon Yusupov', age: 67, lastSync: '30 min ago', hasAnomalies: true },
-  { id: '4', name: 'Dilnoza Abdullaeva', age: 28, lastSync: '2 hours ago', hasAnomalies: false },
-  { id: '5', name: 'Bobur Tursunov', age: 55, lastSync: '15 min ago', hasAnomalies: true },
-];
-
-function generateMockTelemetry(): TelemetryData {
-  function gen(days: number, base: number, variance: number) {
-    const points = [];
-    const now = Date.now();
-    for (let i = days; i >= 0; i--) {
-      points.push({
-        timestamp: new Date(now - i * 24 * 60 * 60 * 1000).toISOString(),
-        value: base + (Math.random() - 0.5) * variance * 2,
-      });
-    }
-    return points;
-  }
-
-  return {
-    heartRate: gen(90, 72, 15),
-    spO2: gen(90, 96, 2),
-    hrvMs: gen(90, 42, 18),
-    sleepHours: gen(90, 6.8, 2),
-    steps: gen(90, 7500, 3500),
-  };
-}
-
-function generateAnomalies(patientId: string): AnomalyPoint[] {
-  const patient = mockPatientList.find((p) => p.id === patientId);
-  if (!patient?.hasAnomalies) return [];
-
-  return [
-    {
-      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      metric: 'heartRate',
-      value: 118,
-      expectedMin: 55,
-      expectedMax: 100,
-      severity: 'alert',
-    },
-    {
-      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      metric: 'spO2',
-      value: 91,
-      expectedMin: 95,
-      expectedMax: 100,
-      severity: 'warning',
-    },
-  ];
+function calcAge(dob: string): number {
+  const birth = new Date(dob);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age--;
+  return age;
 }
 
 // ---------------------------------------------------------------------------
@@ -77,14 +27,35 @@ function generateAnomalies(patientId: string): AnomalyPoint[] {
 // ---------------------------------------------------------------------------
 
 export function PatientTelemetryPage() {
-  const [selectedPatientId, setSelectedPatientId] = useState('');
-  const [isLoading] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const doctorId = user?.id ?? '';
+  const [searchParams] = useSearchParams();
+  const initialPatientId = searchParams.get('patientId') ?? '';
 
-  const selectedPatient = mockPatientList.find((p) => p.id === selectedPatientId);
-  const telemetryData = useMemo(() => generateMockTelemetry(), [selectedPatientId]);
-  const anomalies = useMemo(() => generateAnomalies(selectedPatientId), [selectedPatientId]);
+  const [selectedPatientId, setSelectedPatientId] = useState(initialPatientId);
+  const { patients, isLoading: patientsLoading } = usePatients(doctorId);
 
-  if (isLoading) {
+  const { vitals, isLoading: telemetryLoading, getLatestVital } = useTelemetry({
+    patientId: selectedPatientId,
+    days: 90,
+    enabled: !!selectedPatientId,
+  });
+
+  const selectedPatient = patients.find((p) => p.id === selectedPatientId);
+
+  // Convert to TelemetryDashboard format
+  const telemetryData: TelemetryData | null = useMemo(() => {
+    if (!vitals || Object.keys(vitals).length === 0) return null;
+    return {
+      heartRate: (vitals['heart_rate'] ?? []).map(d => ({ timestamp: d.timestamp, value: d.value })),
+      spO2: (vitals['spo2'] ?? []).map(d => ({ timestamp: d.timestamp, value: d.value })),
+      hrvMs: (vitals['hrv'] ?? []).map(d => ({ timestamp: d.timestamp, value: d.value })),
+      sleepHours: (vitals['sleep'] ?? []).map(d => ({ timestamp: d.timestamp, value: d.value })),
+      steps: (vitals['steps'] ?? []).map(d => ({ timestamp: d.timestamp, value: d.value })),
+    };
+  }, [vitals]);
+
+  if (patientsLoading) {
     return (
       <div className="flex items-center justify-center py-24">
         <Spinner size="lg" />
@@ -113,20 +84,18 @@ export function PatientTelemetryPage() {
                 label="Select Patient"
                 value={selectedPatientId}
                 onChange={(e) => setSelectedPatientId(e.target.value)}
-                options={mockPatientList.map((p) => ({
+                options={patients.map((p) => ({
                   value: p.id,
-                  label: `${p.name} (${p.age}y)${p.hasAnomalies ? ' - Has anomalies' : ''}`,
+                  label: `${p.firstName} ${p.lastName} (${calcAge(p.dateOfBirth)}y)`,
                 }))}
                 placeholder="Choose a patient to view their telemetry..."
               />
             </div>
             {selectedPatient && (
               <div className="flex items-center gap-3 text-sm">
-                <Badge variant={selectedPatient.hasAnomalies ? 'error' : 'success'} dot>
-                  {selectedPatient.hasAnomalies ? 'Anomalies Detected' : 'Normal'}
-                </Badge>
+                <Badge variant="success" dot>Synced</Badge>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  Last sync: {selectedPatient.lastSync}
+                  {selectedPatient.region}, {selectedPatient.city}
                 </span>
               </div>
             )}
@@ -149,36 +118,47 @@ export function PatientTelemetryPage() {
             </p>
           </CardContent>
         </Card>
+      ) : telemetryLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Spinner size="lg" />
+        </div>
       ) : (
         <>
           {/* Patient Info Bar */}
           {selectedPatient && (
             <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-lg font-bold text-primary-700 dark:bg-primary-900 dark:text-primary-300">
-                {selectedPatient.name.split(' ').map((n) => n[0]).join('')}
+                {selectedPatient.firstName[0]}{selectedPatient.lastName[0]}
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  {selectedPatient.name}
+                  {selectedPatient.firstName} {selectedPatient.lastName}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {selectedPatient.age} years old | Last sync: {selectedPatient.lastSync}
+                  {calcAge(selectedPatient.dateOfBirth)} years old | Blood Type: {selectedPatient.bloodType ?? 'Unknown'}
                 </p>
               </div>
-              {anomalies.length > 0 && (
-                <div className="ml-auto flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-300">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  {anomalies.length} anomal{anomalies.length === 1 ? 'y' : 'ies'} detected
-                </div>
-              )}
+              <div className="ml-auto flex items-center gap-4 text-sm">
+                {getLatestVital('heart_rate') && (
+                  <span className="text-xs text-slate-500">HR: <strong>{getLatestVital('heart_rate')!.value.toFixed(0)} bpm</strong></span>
+                )}
+                {getLatestVital('spo2') && (
+                  <span className="text-xs text-slate-500">SpO2: <strong>{getLatestVital('spo2')!.value.toFixed(1)}%</strong></span>
+                )}
+              </div>
             </div>
           )}
 
           {/* Telemetry Dashboard */}
-          <TelemetryDashboard
-            data={telemetryData}
-            anomalies={anomalies}
-          />
+          {telemetryData && telemetryData.heartRate.length > 0 ? (
+            <TelemetryDashboard data={telemetryData} anomalies={[]} />
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center py-16">
+                <p className="text-sm text-slate-500">No telemetry data available for this patient.</p>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>

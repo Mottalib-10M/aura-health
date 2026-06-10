@@ -1,80 +1,76 @@
-import { GraphQLClient, type RequestMiddleware, type ResponseMiddleware } from 'graphql-request';
 import { useAuthStore } from '@/stores/authStore';
 
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
 
-const GRAPHQL_ENDPOINT = import.meta.env.VITE_GRAPHQL_ENDPOINT ?? '/graphql';
+const GRAPHQL_ENDPOINT =
+  import.meta.env.VITE_GRAPHQL_ENDPOINT ??
+  `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4000'}/graphql`;
 
 // ---------------------------------------------------------------------------
-// Middleware
-// ---------------------------------------------------------------------------
-
-/**
- * Injects the Authorization header with the current bearer token.
- */
-const requestMiddleware: RequestMiddleware = async (request) => {
-  const token = useAuthStore.getState().token;
-
-  return {
-    ...request,
-    headers: {
-      ...request.headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  };
-};
-
-/**
- * Handles response-level errors such as expired tokens.
- */
-const responseMiddleware: ResponseMiddleware = (response) => {
-  if (response instanceof Error) {
-    const message = response.message;
-
-    // Handle token expiry by logging out
-    if (message.includes('UNAUTHENTICATED') || message.includes('401')) {
-      const { logout } = useAuthStore.getState();
-      logout();
-      window.location.href = '/login';
-    }
-  }
-};
-
-// ---------------------------------------------------------------------------
-// GraphQL Client
-// ---------------------------------------------------------------------------
-
-export const graphqlClient = new GraphQLClient(GRAPHQL_ENDPOINT, {
-  requestMiddleware,
-  responseMiddleware,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// ---------------------------------------------------------------------------
-// Helper: Execute a typed GraphQL request
+// GraphQL Client — plain fetch, no library overhead
 // ---------------------------------------------------------------------------
 
 /**
- * Execute a typed GraphQL query or mutation.
- * Wraps graphql-request's `request` with error normalization.
+ * Execute a typed GraphQL query or mutation using native fetch.
  */
 export async function gqlRequest<TData, TVariables extends Record<string, unknown> = Record<string, unknown>>(
   document: string,
   variables?: TVariables,
 ): Promise<TData> {
-  try {
-    return await graphqlClient.request<TData>(document, variables as Record<string, unknown>);
-  } catch (error: unknown) {
-    // Normalize GraphQL errors into a readable format
-    if (error && typeof error === 'object' && 'response' in error) {
-      const gqlError = error as { response: { errors?: Array<{ message: string }> } };
-      const messages = gqlError.response.errors?.map((e) => e.message).join(', ');
-      throw new Error(messages ?? 'An unexpected GraphQL error occurred');
-    }
-    throw error;
+  const token = useAuthStore.getState().token;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
+
+  let response: Response;
+
+  try {
+    response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        query: document,
+        variables: variables ?? undefined,
+      }),
+    });
+  } catch (networkError) {
+    throw new Error('Network error — unable to reach the server');
+  }
+
+  // Handle non-OK HTTP responses
+  if (!response.ok) {
+    // Token expired / unauthorized → logout
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
+      throw new Error('Session expired');
+    }
+    const text = await response.text().catch(() => '');
+    throw new Error(text || `Server error (${response.status})`);
+  }
+
+  const json = await response.json();
+
+  // Handle GraphQL-level errors
+  if (json.errors?.length) {
+    const messages = json.errors.map((e: { message: string }) => e.message).join(', ');
+
+    // Check for auth errors in GraphQL responses
+    if (messages.includes('UNAUTHENTICATED') || messages.includes('401')) {
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
+    }
+
+    throw new Error(messages);
+  }
+
+  return json.data as TData;
 }

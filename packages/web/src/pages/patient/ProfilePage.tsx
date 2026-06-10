@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { User, Lock, Shield, Bell, Watch, Globe, Trash2, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Shield, Bell, Watch, Globe, Trash2, Save, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useAuthStore } from '@/stores/authStore';
+import { useProfile } from '@/hooks/useProfile';
 import { cn } from '@/utils/cn';
 
 // ---------------------------------------------------------------------------
@@ -14,12 +15,13 @@ import { cn } from '@/utils/cn';
 
 export function ProfilePage() {
   const user = useAuthStore((s) => s.user);
+  const { updateProfileAsync, isUpdating, isSuccess, error: profileError, reset } = useProfile();
 
   const [firstName, setFirstName] = useState(user?.firstName ?? '');
   const [lastName, setLastName] = useState(user?.lastName ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [phone, setPhone] = useState('+998 90 123 4567');
-  const [dateOfBirth, setDateOfBirth] = useState('1990-05-15');
+  const [phone, setPhone] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -40,13 +42,17 @@ export function ProfilePage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleSaveProfile = async () => {
-    setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+    if (!user?.id) return;
+    reset();
+    await updateProfileAsync({
+      patientId: user.id,
+      firstName,
+      lastName,
+      email: email || undefined,
+      phone: phone || undefined,
+      language,
+    });
   };
 
   return (
@@ -102,8 +108,17 @@ export function ProfilePage() {
               onChange={(e) => setDateOfBirth(e.target.value)}
             />
           </div>
+          {profileError && (
+            <p className="text-sm text-red-600">{profileError.message}</p>
+          )}
+          {isSuccess && (
+            <p className="flex items-center gap-1 text-sm text-green-600">
+              <CheckCircle className="h-4 w-4" />
+              Profile updated successfully
+            </p>
+          )}
           <div className="flex justify-end">
-            <Button variant="primary" onClick={handleSaveProfile} loading={isSaving}>
+            <Button variant="primary" onClick={handleSaveProfile} loading={isUpdating}>
               <Save className="h-4 w-4" />
               Save Changes
             </Button>

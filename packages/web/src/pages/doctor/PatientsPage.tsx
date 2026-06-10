@@ -1,46 +1,67 @@
 import { useState, useMemo } from 'react';
-import { Search, Filter, ChevronDown, ChevronUp, User, Phone, Mail, Calendar, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, ChevronDown, ChevronUp, User, Calendar, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge, UrgencyBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/utils/cn';
+import { useAuthStore } from '@/stores/authStore';
+import { usePatients, type PatientRow } from '@/hooks/usePatients';
 
 // ---------------------------------------------------------------------------
-// Mock Data
+// Helpers
 // ---------------------------------------------------------------------------
 
-interface PatientRow {
-  id: string;
-  firstName: string;
-  lastName: string;
-  age: number;
-  gender: string;
-  lastVisit: string;
-  triageStatus: 'low' | 'moderate' | 'high' | 'critical' | 'emergency';
-  phone: string;
-  email: string;
-  conditions: string[];
-  nextAppointment?: string;
+function calcAge(dob: string): number {
+  const birth = new Date(dob);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age--;
+  return age;
 }
 
-const mockPatients: PatientRow[] = [
-  { id: '1', firstName: 'Aziz', lastName: 'Rakhimov', age: 45, gender: 'Male', lastVisit: '2026-05-10', triageStatus: 'critical', phone: '+998 90 111 2222', email: 'aziz@email.com', conditions: ['Diabetes', 'Hypertension'], nextAppointment: '2026-05-20' },
-  { id: '2', firstName: 'Malika', lastName: 'Karimova', age: 32, gender: 'Female', lastVisit: '2026-05-12', triageStatus: 'moderate', phone: '+998 90 333 4444', email: 'malika@email.com', conditions: ['Asthma'] },
-  { id: '3', firstName: 'Javlon', lastName: 'Yusupov', age: 67, gender: 'Male', lastVisit: '2026-05-08', triageStatus: 'high', phone: '+998 90 555 6666', email: 'javlon@email.com', conditions: ['COPD', 'Heart Failure'], nextAppointment: '2026-05-18' },
-  { id: '4', firstName: 'Dilnoza', lastName: 'Abdullaeva', age: 28, gender: 'Female', lastVisit: '2026-05-14', triageStatus: 'low', phone: '+998 90 777 8888', email: 'dilnoza@email.com', conditions: ['Allergies'] },
-  { id: '5', firstName: 'Bobur', lastName: 'Tursunov', age: 55, gender: 'Male', lastVisit: '2026-04-28', triageStatus: 'emergency', phone: '+998 90 999 0000', email: 'bobur@email.com', conditions: ['Acute MI', 'Diabetes'], nextAppointment: '2026-05-15' },
-  { id: '6', firstName: 'Nodira', lastName: 'Mirzayeva', age: 41, gender: 'Female', lastVisit: '2026-05-05', triageStatus: 'moderate', phone: '+998 91 222 3333', email: 'nodira@email.com', conditions: ['Hypothyroidism'] },
-  { id: '7', firstName: 'Sardor', lastName: 'Nishanov', age: 73, gender: 'Male', lastVisit: '2026-05-01', triageStatus: 'high', phone: '+998 91 444 5555', email: 'sardor@email.com', conditions: ['Renal Disease', 'Hypertension'] },
-  { id: '8', firstName: 'Gulnora', lastName: 'Sharipova', age: 36, gender: 'Female', lastVisit: '2026-05-13', triageStatus: 'low', phone: '+998 91 666 7777', email: 'gulnora@email.com', conditions: ['Migraine'] },
-];
+function latestUrgency(patient: PatientRow): 'low' | 'moderate' | 'high' | 'critical' | 'emergency' {
+  const latest = patient.triageHistory?.[0];
+  if (!latest) return 'low';
+  switch (latest.urgencyLevel) {
+    case 'EMERGENCY': return 'emergency';
+    case 'URGENT': return 'high';
+    case 'SEMI_URGENT': return 'moderate';
+    default: return 'low';
+  }
+}
+
+function lastVisitDate(patient: PatientRow): string | null {
+  const completed = patient.appointments?.filter(a => a.status === 'COMPLETED');
+  if (!completed || completed.length === 0) return null;
+  return completed.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())[0].scheduledAt;
+}
+
+function nextAppointmentDate(patient: PatientRow): string | null {
+  const upcoming = patient.appointments?.filter(a => a.status === 'SCHEDULED' || a.status === 'CONFIRMED');
+  if (!upcoming || upcoming.length === 0) return null;
+  return upcoming.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())[0].scheduledAt;
+}
+
+function conditionsFromPrescriptions(patient: PatientRow): string[] {
+  const codes = new Set<string>();
+  patient.prescriptions?.forEach(p => p.diagnosisCodes?.forEach(c => codes.add(c)));
+  return Array.from(codes);
+}
 
 // ---------------------------------------------------------------------------
 // Patient Detail Panel
 // ---------------------------------------------------------------------------
 
 function PatientDetail({ patient, onClose }: { patient: PatientRow; onClose: () => void }) {
+  const navigate = useNavigate();
+  const age = calcAge(patient.dateOfBirth);
+  const urgency = latestUrgency(patient);
+  const conditions = conditionsFromPrescriptions(patient);
+  const nextApt = nextAppointmentDate(patient);
+
   return (
     <Card className="border-primary-200 dark:border-primary-800">
       <CardContent className="p-5">
@@ -54,7 +75,7 @@ function PatientDetail({ patient, onClose }: { patient: PatientRow; onClose: () 
                 {patient.firstName} {patient.lastName}
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {patient.age} years old, {patient.gender}
+                {age} years old, {patient.gender} | {patient.region}, {patient.city}
               </p>
             </div>
           </div>
@@ -66,38 +87,71 @@ function PatientDetail({ patient, onClose }: { patient: PatientRow; onClose: () 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <Phone className="h-4 w-4" />
-              {patient.phone}
+              <span className="font-medium">Blood Type:</span> {patient.bloodType ?? 'Unknown'}
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <Mail className="h-4 w-4" />
-              {patient.email}
+              <span className="font-medium">Aura ID:</span> {patient.auraId}
             </div>
-            {patient.nextAppointment && (
+            {nextApt && (
               <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                 <Calendar className="h-4 w-4" />
-                Next: {new Date(patient.nextAppointment).toLocaleDateString()}
+                Next: {new Date(nextApt).toLocaleDateString()}
               </div>
             )}
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">Conditions</p>
+            <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">Diagnosis Codes</p>
             <div className="flex flex-wrap gap-1">
-              {patient.conditions.map((c) => (
+              {conditions.length > 0 ? conditions.map((c) => (
                 <Badge key={c} variant="default" size="sm">{c}</Badge>
-              ))}
+              )) : (
+                <span className="text-xs text-slate-400">None recorded</span>
+              )}
             </div>
             <div className="mt-3">
               <p className="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Triage Status</p>
-              <UrgencyBadge level={patient.triageStatus} />
+              <UrgencyBadge level={urgency} />
             </div>
           </div>
         </div>
 
+        {/* Vitals summary */}
+        {patient.telemetrySummary && (
+          <div className="mt-4 grid grid-cols-4 gap-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
+            <div className="text-center">
+              <p className="text-xs text-slate-500">Heart Rate</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {patient.telemetrySummary.latestHeartRate?.toFixed(0) ?? '-'} <span className="text-xs font-normal">bpm</span>
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-500">SpO2</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {patient.telemetrySummary.latestSpO2?.toFixed(1) ?? '-'} <span className="text-xs font-normal">%</span>
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-500">Avg HR (24h)</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {patient.telemetrySummary.averageHeartRate?.toFixed(0) ?? '-'}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-500">Last Updated</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {patient.telemetrySummary.lastUpdated ? new Date(patient.telemetrySummary.lastUpdated).toLocaleDateString() : '-'}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4 dark:border-slate-700">
-          <Button variant="primary" size="sm">View Full Record</Button>
-          <Button variant="outline" size="sm">Schedule Appointment</Button>
-          <Button variant="ghost" size="sm">Message Patient</Button>
+          <Button variant="primary" size="sm" onClick={() => navigate(`/doctor/telemetry?patientId=${patient.id}`)}>
+            View Telemetry
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/doctor/schedule')}>
+            Schedule Appointment
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -109,27 +163,31 @@ function PatientDetail({ patient, onClose }: { patient: PatientRow; onClose: () 
 // ---------------------------------------------------------------------------
 
 export function PatientsPage() {
+  const user = useAuthStore((s) => s.user);
+  const doctorId = user?.id ?? '';
+  const { patients, isLoading } = usePatients(doctorId);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
-  const [isLoading] = useState(false);
 
   const filteredPatients = useMemo(() => {
-    let result = mockPatients;
+    let result = patients;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
         (p) =>
           p.firstName.toLowerCase().includes(q) ||
           p.lastName.toLowerCase().includes(q) ||
-          p.conditions.some((c) => c.toLowerCase().includes(q)),
+          p.auraId.toLowerCase().includes(q) ||
+          conditionsFromPrescriptions(p).some((c) => c.toLowerCase().includes(q)),
       );
     }
     if (urgencyFilter !== 'all') {
-      result = result.filter((p) => p.triageStatus === urgencyFilter);
+      result = result.filter((p) => latestUrgency(p) === urgencyFilter);
     }
     return result;
-  }, [searchQuery, urgencyFilter]);
+  }, [patients, searchQuery, urgencyFilter]);
 
   if (isLoading) {
     return (
@@ -143,9 +201,7 @@ export function PatientsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-          Patient List
-        </h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Patient List</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Manage and review your patients
         </p>
@@ -163,7 +219,7 @@ export function PatientsPage() {
         </div>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-slate-400" />
-          {['all', 'emergency', 'critical', 'high', 'moderate', 'low'].map((level) => (
+          {['all', 'emergency', 'high', 'moderate', 'low'].map((level) => (
             <button
               key={level}
               type="button"
@@ -183,7 +239,7 @@ export function PatientsPage() {
 
       {/* Results Count */}
       <p className="text-sm text-slate-500 dark:text-slate-400">
-        Showing {filteredPatients.length} of {mockPatients.length} patients
+        Showing {filteredPatients.length} of {patients.length} patients
       </p>
 
       {/* Table */}
@@ -200,58 +256,53 @@ export function PatientsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
-              {filteredPatients.map((patient) => (
-                <>
-                  <tr
-                    key={patient.id}
-                    className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    onClick={() =>
-                      setExpandedPatient(expandedPatient === patient.id ? null : patient.id)
-                    }
-                  >
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                          {patient.firstName[0]}{patient.lastName[0]}
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-900 dark:text-slate-100">
-                            {patient.firstName} {patient.lastName}
-                          </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">{patient.gender}</p>
-                        </div>
-                      </div>
+              {filteredPatients.map((patient) => {
+                const age = calcAge(patient.dateOfBirth);
+                const urgency = latestUrgency(patient);
+                const lastVisit = lastVisitDate(patient);
+                return (
+                  <tr key={patient.id}>
+                    <td colSpan={expandedPatient === patient.id ? 5 : undefined} className={expandedPatient === patient.id ? 'px-5 py-3' : undefined}>
+                      {expandedPatient === patient.id ? (
+                        <PatientDetail patient={patient} onClose={() => setExpandedPatient(null)} />
+                      ) : null}
                     </td>
-                    <td className="px-5 py-3 text-slate-700 dark:text-slate-300">{patient.age}</td>
-                    <td className="px-5 py-3 text-slate-500 dark:text-slate-400">
-                      {new Date(patient.lastVisit).toLocaleDateString()}
-                    </td>
-                    <td className="px-5 py-3">
-                      <UrgencyBadge level={patient.triageStatus} />
-                    </td>
-                    <td className="px-5 py-3">
-                      <Button variant="ghost" size="sm">
-                        {expandedPatient === patient.id ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                        Details
-                      </Button>
-                    </td>
+                    {expandedPatient !== patient.id && (
+                      <>
+                        <td className="px-5 py-3">
+                          <div
+                            className="flex items-center gap-3 cursor-pointer"
+                            onClick={() => setExpandedPatient(patient.id)}
+                          >
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                              {patient.firstName[0]}{patient.lastName[0]}
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-900 dark:text-slate-100">
+                                {patient.firstName} {patient.lastName}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">{patient.gender}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-slate-700 dark:text-slate-300">{age}</td>
+                        <td className="px-5 py-3 text-slate-500 dark:text-slate-400">
+                          {lastVisit ? new Date(lastVisit).toLocaleDateString() : 'No visits'}
+                        </td>
+                        <td className="px-5 py-3">
+                          <UrgencyBadge level={urgency} />
+                        </td>
+                        <td className="px-5 py-3">
+                          <Button variant="ghost" size="sm" onClick={() => setExpandedPatient(patient.id)}>
+                            <ChevronDown className="h-4 w-4" />
+                            Details
+                          </Button>
+                        </td>
+                      </>
+                    )}
                   </tr>
-                  {expandedPatient === patient.id && (
-                    <tr key={`${patient.id}-detail`}>
-                      <td colSpan={5} className="px-5 py-3">
-                        <PatientDetail
-                          patient={patient}
-                          onClose={() => setExpandedPatient(null)}
-                        />
-                      </td>
-                    </tr>
-                  )}
-                </>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -259,7 +310,7 @@ export function PatientsPage() {
           <div className="flex flex-col items-center py-12">
             <User className="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              No patients match your search
+              {patients.length === 0 ? 'No patients found. Patients will appear here after appointments.' : 'No patients match your search'}
             </p>
           </div>
         )}

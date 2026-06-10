@@ -136,8 +136,8 @@ export function signToken(user: { id: string; role: UserRole; auraId?: string; i
   };
 
   return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn,
-  });
+    expiresIn: config.jwt.expiresIn as string & { __brand?: never },
+  } as jwt.SignOptions);
 }
 
 /**

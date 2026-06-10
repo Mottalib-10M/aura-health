@@ -1,136 +1,62 @@
-import { useState } from 'react';
-import { CalendarDays, Clock, User, Plus, Calendar, Video, MapPin } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useState, useMemo } from 'react';
+import { CalendarDays, Clock, Plus, Calendar, MapPin } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/utils/cn';
-
-// ---------------------------------------------------------------------------
-// Mock Data
-// ---------------------------------------------------------------------------
-
-interface AppointmentData {
-  id: string;
-  doctorName: string;
-  specialty: string;
-  date: string;
-  time: string;
-  status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
-  type: 'in-person' | 'telemedicine';
-  location?: string;
-}
-
-const mockUpcoming: AppointmentData[] = [
-  {
-    id: '1',
-    doctorName: 'Dr. Alisher Karimov',
-    specialty: 'Cardiology',
-    date: '2026-05-20',
-    time: '10:00 AM',
-    status: 'confirmed',
-    type: 'in-person',
-    location: 'Tashkent Medical Center, Room 302',
-  },
-  {
-    id: '2',
-    doctorName: 'Dr. Nilufar Yusupova',
-    specialty: 'General Practice',
-    date: '2026-05-22',
-    time: '2:30 PM',
-    status: 'pending',
-    type: 'telemedicine',
-  },
-  {
-    id: '3',
-    doctorName: 'Dr. Sardor Rakhimov',
-    specialty: 'Endocrinology',
-    date: '2026-05-28',
-    time: '11:00 AM',
-    status: 'confirmed',
-    type: 'in-person',
-    location: 'National Endocrinology Center',
-  },
-];
-
-const mockPast: AppointmentData[] = [
-  {
-    id: '4',
-    doctorName: 'Dr. Alisher Karimov',
-    specialty: 'Cardiology',
-    date: '2026-04-15',
-    time: '9:00 AM',
-    status: 'completed',
-    type: 'in-person',
-    location: 'Tashkent Medical Center, Room 302',
-  },
-  {
-    id: '5',
-    doctorName: 'Dr. Nilufar Yusupova',
-    specialty: 'General Practice',
-    date: '2026-04-02',
-    time: '3:00 PM',
-    status: 'completed',
-    type: 'telemedicine',
-  },
-  {
-    id: '6',
-    doctorName: 'Dr. Javlon Mirzayev',
-    specialty: 'Dermatology',
-    date: '2026-03-20',
-    time: '1:00 PM',
-    status: 'cancelled',
-    type: 'in-person',
-    location: 'City Clinic #5',
-  },
-];
+import { useAuthStore } from '@/stores/authStore';
+import { useAppointments, type AppointmentRow } from '@/hooks/useAppointments';
 
 // ---------------------------------------------------------------------------
 // Status Config
 // ---------------------------------------------------------------------------
 
-const statusConfig: Record<AppointmentData['status'], { variant: 'success' | 'warning' | 'info' | 'error'; label: string }> = {
-  confirmed: { variant: 'success', label: 'Confirmed' },
-  pending: { variant: 'warning', label: 'Pending' },
-  completed: { variant: 'info', label: 'Completed' },
-  cancelled: { variant: 'error', label: 'Cancelled' },
+const statusConfig: Record<string, { variant: 'success' | 'warning' | 'info' | 'error' | 'default'; label: string }> = {
+  CONFIRMED: { variant: 'success', label: 'Confirmed' },
+  SCHEDULED: { variant: 'warning', label: 'Pending' },
+  COMPLETED: { variant: 'info', label: 'Completed' },
+  CANCELLED: { variant: 'error', label: 'Cancelled' },
+  CHECKED_IN: { variant: 'success', label: 'Checked In' },
+  IN_PROGRESS: { variant: 'info', label: 'In Progress' },
+  NO_SHOW: { variant: 'error', label: 'No Show' },
 };
 
 // ---------------------------------------------------------------------------
 // Appointment Card
 // ---------------------------------------------------------------------------
 
-function AppointmentCard({ appointment }: { appointment: AppointmentData }) {
-  const status = statusConfig[appointment.status];
+function AppointmentCard({
+  appointment,
+  onCancel,
+  isCancelling,
+}: {
+  appointment: AppointmentRow;
+  onCancel: (id: string) => void;
+  isCancelling: boolean;
+}) {
+  const status = statusConfig[appointment.status] ?? { variant: 'default' as const, label: appointment.status };
+  const isUpcoming = ['SCHEDULED', 'CONFIRMED'].includes(appointment.status);
 
   return (
     <Card className="transition-shadow hover:shadow-md">
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className={cn(
-              'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg',
-              appointment.type === 'telemedicine'
-                ? 'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
-                : 'bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400',
-            )}>
-              {appointment.type === 'telemedicine' ? (
-                <Video className="h-5 w-5" />
-              ) : (
-                <MapPin className="h-5 w-5" />
-              )}
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400">
+              <MapPin className="h-5 w-5" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {appointment.doctorName}
+                Dr. {appointment.doctor?.firstName} {appointment.doctor?.lastName}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {appointment.specialty}
+                {appointment.doctor?.specialty ?? 'General Practice'}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  {new Date(appointment.date).toLocaleDateString('en-US', {
+                  {new Date(appointment.scheduledAt).toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
                     day: 'numeric',
@@ -138,13 +64,15 @@ function AppointmentCard({ appointment }: { appointment: AppointmentData }) {
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" />
-                  {appointment.time}
+                  {new Date(appointment.scheduledAt).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </span>
               </div>
-              {appointment.location && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
-                  <MapPin className="h-3 w-3" />
-                  {appointment.location}
+              {appointment.reason && (
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                  {appointment.reason}
                 </p>
               )}
             </div>
@@ -153,11 +81,16 @@ function AppointmentCard({ appointment }: { appointment: AppointmentData }) {
             {status.label}
           </Badge>
         </div>
-        {appointment.status === 'confirmed' && appointment.type === 'telemedicine' && (
-          <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-            <Button variant="primary" size="sm" className="w-full">
-              <Video className="h-4 w-4" />
-              Join Video Call
+        {isUpcoming && (
+          <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3 dark:border-slate-700">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600"
+              onClick={() => onCancel(appointment.id)}
+              disabled={isCancelling}
+            >
+              {isCancelling ? 'Cancelling...' : 'Cancel'}
             </Button>
           </div>
         )}
@@ -167,59 +100,40 @@ function AppointmentCard({ appointment }: { appointment: AppointmentData }) {
 }
 
 // ---------------------------------------------------------------------------
-// Empty State
-// ---------------------------------------------------------------------------
-
-function EmptyState({ tab }: { tab: 'upcoming' | 'past' }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-        <Calendar className="h-8 w-8 text-slate-400" />
-      </div>
-      <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
-        {tab === 'upcoming' ? 'No Upcoming Appointments' : 'No Past Appointments'}
-      </h3>
-      <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
-        {tab === 'upcoming'
-          ? 'Schedule a new appointment to get started.'
-          : 'Your completed appointments will appear here.'}
-      </p>
-      {tab === 'upcoming' && (
-        <Button variant="primary" size="sm">
-          <Plus className="h-4 w-4" />
-          Book Appointment
-        </Button>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Page Component
 // ---------------------------------------------------------------------------
 
 export function AppointmentsPage() {
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
-  const [isLoading] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const patientId = user?.id ?? '';
 
-  const appointments = activeTab === 'upcoming' ? mockUpcoming : mockPast;
+  const { appointments, isLoading, cancelAppointment, isCancelling } = useAppointments(patientId);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+
+  const upcoming = useMemo(
+    () => appointments.filter((a) => ['SCHEDULED', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS'].includes(a.status)),
+    [appointments],
+  );
+  const past = useMemo(
+    () => appointments.filter((a) => ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(a.status)),
+    [appointments],
+  );
+
+  const displayed = activeTab === 'upcoming' ? upcoming : past;
+
+  const handleCancel = (appointmentId: string) => {
+    cancelAppointment({ appointmentId, reason: 'Cancelled by patient' });
+  };
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Appointments
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Appointments</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Manage your medical appointments
           </p>
         </div>
-        <Button variant="primary">
-          <Plus className="h-4 w-4" />
-          Book New Appointment
-        </Button>
       </div>
 
       {/* Tabs */}
@@ -238,7 +152,7 @@ export function AppointmentsPage() {
           >
             {tab === 'upcoming' ? 'Upcoming' : 'Past'}
             <span className="ml-2 rounded-full bg-white/20 px-1.5 py-0.5 text-xs">
-              {tab === 'upcoming' ? mockUpcoming.length : mockPast.length}
+              {tab === 'upcoming' ? upcoming.length : past.length}
             </span>
           </button>
         ))}
@@ -249,12 +163,29 @@ export function AppointmentsPage() {
         <div className="flex items-center justify-center py-16">
           <Spinner size="lg" />
         </div>
-      ) : appointments.length === 0 ? (
-        <EmptyState tab={activeTab} />
+      ) : displayed.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+            <Calendar className="h-8 w-8 text-slate-400" />
+          </div>
+          <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+            {activeTab === 'upcoming' ? 'No Upcoming Appointments' : 'No Past Appointments'}
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {activeTab === 'upcoming'
+              ? 'Your scheduled appointments will appear here.'
+              : 'Your completed appointments will appear here.'}
+          </p>
+        </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {appointments.map((appointment) => (
-            <AppointmentCard key={appointment.id} appointment={appointment} />
+          {displayed.map((appointment) => (
+            <AppointmentCard
+              key={appointment.id}
+              appointment={appointment}
+              onCancel={handleCancel}
+              isCancelling={isCancelling}
+            />
           ))}
         </div>
       )}

@@ -451,6 +451,12 @@ export const typeDefs = /* GraphQL */ `
     id: ID!
     role: UserRole!
     auraId: String
+    email: String
+    firstName: String
+    lastName: String
+    avatarUrl: String
+    preferredLanguage: String
+    institutionId: ID
   }
 
   type LongitudinalResult {
@@ -486,6 +492,9 @@ export const typeDefs = /* GraphQL */ `
   # ─────────────────────────────────────────────
 
   type Query {
+    # Auth
+    me: UserInfo
+
     # Patient
     patient(id: ID!): Patient
     patientByAuraId(auraId: String!): Patient
@@ -493,6 +502,7 @@ export const typeDefs = /* GraphQL */ `
     # Doctor
     doctor(id: ID!): Doctor
     doctorsBySpecialty(specialty: String!, region: String): [Doctor!]!
+    doctorPatients(doctorId: ID!): [Patient!]!
 
     # Institution
     institution(id: ID!): Institution

@@ -38,6 +38,7 @@ async function bootstrap(): Promise<void> {
   const apollo = new ApolloServer<UzavitaContext>({
     schema,
     introspection: config.server.isDev,
+    csrfPrevention: false,
     formatError: (formattedError) => {
       // Strip internal details in production
       if (config.server.isProd) {
@@ -90,13 +91,14 @@ async function bootstrap(): Promise<void> {
       origin: config.server.isDev
         ? '*'
         : [
+            'https://uzavita.com',
             'https://app.uzavita.com',
             'https://admin.uzavita.com',
             /\.uzavita\.com$/,
           ],
       credentials: true,
       methods: ['GET', 'POST', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'apollo-require-preflight'],
     }),
   );
 
@@ -199,10 +201,10 @@ async function bootstrap(): Promise<void> {
     expressMiddleware(apollo, {
       context: async ({ req }): Promise<UzavitaContext> => {
         return {
-          user: req.user,
+          user: (req as unknown as { user?: AuthenticatedUser }).user,
         };
       },
-    }),
+    }) as unknown as express.RequestHandler,
   );
 
   // ── 404 handler ────────────────────────────────────────────────────

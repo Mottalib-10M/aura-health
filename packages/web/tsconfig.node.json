@@ -6,6 +6,7 @@
     "allowImportingTsExtensions": true,
     "strict": true,
     "composite": true,
+    "emitDeclarationOnly": true,
     "isolatedModules": true,
     "skipLibCheck": true,
     "types": ["node"]

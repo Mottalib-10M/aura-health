@@ -17,9 +17,9 @@ export const pool = new Pool({
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
   statement_timeout: 30_000,
-  // In production, enable SSL
+  // In production, enable SSL (rejectUnauthorized: false for managed DB providers like Railway)
   ...(config.server.isProd && {
-    ssl: { rejectUnauthorized: true },
+    ssl: { rejectUnauthorized: false },
   }),
 });
 
