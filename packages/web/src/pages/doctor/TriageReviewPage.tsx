@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { ClipboardCheck, Check, Edit, Info } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ClipboardCheck, Check, Edit } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge, UrgencyBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -8,10 +9,14 @@ import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { usePatients } from '@/hooks/usePatients';
+import { gqlRequest } from '@/services/api';
+import { REVIEW_TRIAGE_EVENT } from '@/services/graphql/mutations';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+type UrgencyDisplay = 'low' | 'moderate' | 'high' | 'critical' | 'emergency';
 
 interface FlatTriageReview {
   id: string;
@@ -19,19 +24,31 @@ interface FlatTriageReview {
   patientName: string;
   symptoms: string[];
   symptomDescription: string;
-  urgency: 'low' | 'moderate' | 'high' | 'critical' | 'emergency';
+  urgency: UrgencyDisplay;
+  urgencyRaw: string; // backend enum value
   confidenceScore: number;
   recommendedSpecializations: string[];
+  reviewedBy: string | null;
   createdAt: string;
 }
 
-function mapUrgency(level: string): FlatTriageReview['urgency'] {
+function mapUrgency(level: string): UrgencyDisplay {
   switch (level) {
     case 'EMERGENCY': return 'emergency';
     case 'URGENT': return 'high';
     case 'SEMI_URGENT': return 'moderate';
     case 'NON_URGENT': return 'low';
     default: return 'low';
+  }
+}
+
+function displayToBackendUrgency(level: UrgencyDisplay): string {
+  switch (level) {
+    case 'emergency': return 'EMERGENCY';
+    case 'critical': return 'EMERGENCY';
+    case 'high': return 'URGENT';
+    case 'moderate': return 'SEMI_URGENT';
+    case 'low': return 'NON_URGENT';
   }
 }
 
@@ -43,15 +60,26 @@ function OverrideModal({
   open,
   onClose,
   review,
+  onSubmit,
+  isSubmitting,
 }: {
   open: boolean;
   onClose: () => void;
   review: FlatTriageReview | null;
+  onSubmit: (newUrgency: string, notes: string) => void;
+  isSubmitting: boolean;
 }) {
   const [notes, setNotes] = useState('');
-  const [newUrgency, setNewUrgency] = useState('');
+  const [newUrgency, setNewUrgency] = useState<UrgencyDisplay | ''>('');
 
   if (!review) return null;
+
+  const handleSubmit = () => {
+    const backendUrgency = newUrgency ? displayToBackendUrgency(newUrgency) : review.urgencyRaw;
+    onSubmit(backendUrgency, notes);
+    setNotes('');
+    setNewUrgency('');
+  };
 
   return (
     <Modal
@@ -62,9 +90,13 @@ function OverrideModal({
       size="lg"
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={!notes.trim()} onClick={onClose}>
-            Submit Override
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+          <Button
+            variant="primary"
+            disabled={!notes.trim() || isSubmitting}
+            onClick={handleSubmit}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Override'}
           </Button>
         </>
       }
@@ -130,10 +162,12 @@ function TriageReviewCard({
   review,
   onApprove,
   onOverride,
+  isApproving,
 }: {
   review: FlatTriageReview;
   onApprove: () => void;
   onOverride: (review: FlatTriageReview) => void;
+  isApproving: boolean;
 }) {
   return (
     <Card className={cn(
@@ -185,9 +219,9 @@ function TriageReviewCard({
         </div>
 
         <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-700">
-          <Button variant="primary" size="sm" onClick={onApprove}>
+          <Button variant="primary" size="sm" onClick={onApprove} disabled={isApproving}>
             <Check className="h-4 w-4" />
-            Approve
+            {isApproving ? 'Approving...' : 'Approve'}
           </Button>
           <Button variant="outline" size="sm" onClick={() => onOverride(review)}>
             <Edit className="h-4 w-4" />
@@ -207,8 +241,25 @@ export function TriageReviewPage() {
   const user = useAuthStore((s) => s.user);
   const doctorId = user?.id ?? '';
   const { patients, isLoading } = usePatients(doctorId);
+  const queryClient = useQueryClient();
   const [overrideReview, setOverrideReview] = useState<FlatTriageReview | null>(null);
-  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+
+  const reviewMutation = useMutation({
+    mutationFn: (input: { triageEventId: string; approved: boolean; newUrgencyLevel?: string; notes?: string }) =>
+      gqlRequest<{ reviewTriageEvent: unknown }>(REVIEW_TRIAGE_EVENT, { input }),
+    onSuccess: (_, variables) => {
+      setReviewedIds((prev) => new Set([...prev, variables.triageEventId]));
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      setOverrideReview(null);
+      setApprovingId(null);
+    },
+    onError: (err) => {
+      console.error('Review triage failed:', err);
+      setApprovingId(null);
+    },
+  });
 
   // Flatten all triage events from all patients
   const triageReviews: FlatTriageReview[] = useMemo(() => {
@@ -222,21 +273,35 @@ export function TriageReviewPage() {
           symptoms: triage.symptoms,
           symptomDescription: triage.symptoms.join(', '),
           urgency: mapUrgency(triage.urgencyLevel),
+          urgencyRaw: triage.urgencyLevel,
           confidenceScore: triage.confidenceScore,
           recommendedSpecializations: [],
+          reviewedBy: (triage as any).reviewedBy ?? null,
           createdAt: triage.createdAt,
         });
       }
     }
-    // Sort by creation date (newest first)
     reviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return reviews;
   }, [patients]);
 
-  const pendingReviews = triageReviews.filter(r => !approvedIds.has(r.id));
+  const pendingReviews = triageReviews.filter(
+    (r) => !r.reviewedBy && !reviewedIds.has(r.id),
+  );
 
   const handleApprove = (id: string) => {
-    setApprovedIds(prev => new Set([...prev, id]));
+    setApprovingId(id);
+    reviewMutation.mutate({ triageEventId: id, approved: true });
+  };
+
+  const handleOverrideSubmit = (newUrgency: string, notes: string) => {
+    if (!overrideReview) return;
+    reviewMutation.mutate({
+      triageEventId: overrideReview.id,
+      approved: false,
+      newUrgencyLevel: newUrgency,
+      notes,
+    });
   };
 
   if (isLoading) {
@@ -297,6 +362,7 @@ export function TriageReviewPage() {
               review={review}
               onApprove={() => handleApprove(review.id)}
               onOverride={setOverrideReview}
+              isApproving={approvingId === review.id}
             />
           ))}
         </div>
@@ -306,6 +372,8 @@ export function TriageReviewPage() {
         open={overrideReview !== null}
         onClose={() => setOverrideReview(null)}
         review={overrideReview}
+        onSubmit={handleOverrideSubmit}
+        isSubmitting={reviewMutation.isPending}
       />
     </div>
   );

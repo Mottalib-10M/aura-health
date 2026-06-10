@@ -211,6 +211,78 @@ export const mutationResolvers = {
       };
     },
 
+    // ── Review Triage Event (Approve / Override) ─────────────────────
+    async reviewTriageEvent(
+      _: unknown,
+      { input }: { input: { triageEventId: string; approved: boolean; newUrgencyLevel?: string; notes?: string } },
+      ctx: GraphQLContext,
+    ) {
+      requireRole(ctx.user, UserRole.DOCTOR, UserRole.SYSTEM_ADMIN);
+
+      const existing = await query(
+        `SELECT * FROM triage_events WHERE id = $1`,
+        [input.triageEventId],
+      );
+
+      if (existing.rows.length === 0) {
+        throw new Error('Triage event not found');
+      }
+
+      const row = existing.rows[0];
+
+      if (input.approved) {
+        // Approve: mark as reviewed, keep urgency
+        await query(
+          `UPDATE triage_events
+           SET reviewed_by = $2, reviewed_at = NOW(), review_notes = $3
+           WHERE id = $1`,
+          [input.triageEventId, ctx.user!.id, input.notes ?? 'Approved by doctor'],
+        );
+      } else {
+        // Override: save original urgency, set new one
+        const newUrgency = input.newUrgencyLevel ?? row.urgency_level;
+        await query(
+          `UPDATE triage_events
+           SET reviewed_by = $2, reviewed_at = NOW(), review_notes = $3,
+               original_urgency_level = urgency_level, urgency_level = $4
+           WHERE id = $1`,
+          [input.triageEventId, ctx.user!.id, input.notes ?? '', newUrgency],
+        );
+      }
+
+      const updated = await query(
+        `SELECT * FROM triage_events WHERE id = $1`,
+        [input.triageEventId],
+      );
+
+      const t = updated.rows[0];
+      logger.info(
+        { triageEventId: input.triageEventId, approved: input.approved, doctorId: ctx.user!.id },
+        'Triage event reviewed',
+      );
+
+      return {
+        id: t.id,
+        patientId: t.patient_id,
+        symptoms: t.symptoms,
+        symptomDescription: t.symptom_description,
+        urgencyLevel: t.urgency_level,
+        confidenceScore: t.confidence_score,
+        recommendedSpecializations: t.recommended_specializations,
+        redFlags: t.red_flags,
+        suggestedDiagnostics: t.suggested_diagnostics,
+        differentialDiagnoses: t.differential_diagnoses ?? [],
+        modelUsed: t.model_used,
+        responseLatencyMs: t.response_latency_ms,
+        followUpScheduled: t.follow_up_scheduled,
+        reviewedBy: t.reviewed_by,
+        reviewedAt: t.reviewed_at?.toISOString?.() ?? t.reviewed_at,
+        reviewNotes: t.review_notes,
+        originalUrgencyLevel: t.original_urgency_level,
+        createdAt: (t.created_at as Date)?.toISOString(),
+      };
+    },
+
     // ── Create Appointment ────────────────────────────────────────────
     async createAppointment(
       _: unknown,

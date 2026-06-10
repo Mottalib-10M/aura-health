@@ -95,6 +95,19 @@ export const SUBMIT_SYMPTOM_TRIAGE = /* GraphQL */ `
   }
 `;
 
+export const REVIEW_TRIAGE_EVENT = /* GraphQL */ `
+  mutation ReviewTriageEvent($input: ReviewTriageInput!) {
+    reviewTriageEvent(input: $input) {
+      id
+      urgencyLevel
+      reviewedBy
+      reviewedAt
+      reviewNotes
+      originalUrgencyLevel
+    }
+  }
+`;
+
 // ---- Appointments ---------------------------------------------------------
 
 export const CREATE_APPOINTMENT = /* GraphQL */ `

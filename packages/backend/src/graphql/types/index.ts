@@ -162,6 +162,10 @@ export const typeDefs = /* GraphQL */ `
     modelUsed: String!
     responseLatencyMs: Int!
     followUpScheduled: Boolean!
+    reviewedBy: ID
+    reviewedAt: String
+    reviewNotes: String
+    originalUrgencyLevel: UrgencyLevel
     createdAt: String!
   }
 
@@ -404,6 +408,13 @@ export const typeDefs = /* GraphQL */ `
     isAvailable: Boolean!
   }
 
+  input ReviewTriageInput {
+    triageEventId: ID!
+    approved: Boolean!
+    newUrgencyLevel: UrgencyLevel
+    notes: String
+  }
+
   input SurveillanceInput {
     region: String!
     city: String!
@@ -536,6 +547,7 @@ export const typeDefs = /* GraphQL */ `
   type Mutation {
     # Triage
     submitSymptomTriage(input: SymptomTriageInput!): TriageOutput!
+    reviewTriageEvent(input: ReviewTriageInput!): TriageEvent!
 
     # Appointments
     createAppointment(input: CreateAppointmentInput!): AppointmentResult!

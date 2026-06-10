@@ -1,14 +1,18 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ChevronDown, ChevronUp, User, Calendar, X } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Filter, ChevronDown, User, Calendar, X, Plus, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge, UrgencyBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { usePatients, type PatientRow } from '@/hooks/usePatients';
+import { gqlRequest } from '@/services/api';
+import { CREATE_APPOINTMENT } from '@/services/graphql/mutations';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -52,10 +56,181 @@ function conditionsFromPrescriptions(patient: PatientRow): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// Create Appointment Modal
+// ---------------------------------------------------------------------------
+
+function CreateAppointmentModal({
+  open,
+  onClose,
+  patient,
+  doctorId,
+}: {
+  open: boolean;
+  onClose: () => void;
+  patient: PatientRow | null;
+  doctorId: string;
+}) {
+  const queryClient = useQueryClient();
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  });
+  const [time, setTime] = useState('09:00');
+  const [reason, setReason] = useState('');
+  const [urgency, setUrgency] = useState<string>('NON_URGENT');
+
+  const createMutation = useMutation({
+    mutationFn: (input: Record<string, unknown>) =>
+      gqlRequest<{ createAppointment: unknown }>(CREATE_APPOINTMENT, { input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      onClose();
+      setReason('');
+      setUrgency('NON_URGENT');
+    },
+  });
+
+  if (!patient) return null;
+
+  const handleSubmit = () => {
+    const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
+    createMutation.mutate({
+      patientId: patient.id,
+      doctorId,
+      specialty: 'general',
+      preferredDate: date,
+      preferredTimeStart: time,
+      preferredTimeEnd: `${String(parseInt(time.split(':')[0]) + 1).padStart(2, '0')}:${time.split(':')[1]}`,
+      urgencyLevel: urgency,
+      reason: reason || 'Consultation',
+    });
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Schedule Appointment"
+      description={`New appointment for ${patient.firstName} ${patient.lastName}`}
+      size="lg"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={createMutation.isPending}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSubmit} disabled={createMutation.isPending || !date || !time}>
+            {createMutation.isPending ? 'Scheduling...' : 'Schedule Appointment'}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        {createMutation.isError && (
+          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+            Failed to create appointment. Please try again.
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              className={cn(
+                'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+                'text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+              )}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Time <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              min="08:00"
+              max="17:00"
+              className={cn(
+                'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+                'text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+              )}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Urgency
+          </label>
+          <div className="flex gap-2">
+            {[
+              { value: 'NON_URGENT', label: 'Standard' },
+              { value: 'SEMI_URGENT', label: 'Semi-Urgent' },
+              { value: 'URGENT', label: 'Urgent' },
+              { value: 'EMERGENCY', label: 'Emergency' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setUrgency(opt.value)}
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                  urgency === opt.value
+                    ? 'bg-primary-600 text-white'
+                    : 'border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400',
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Reason
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            placeholder="Reason for appointment (e.g., Follow-up checkup, Lab results review...)"
+            className={cn(
+              'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+              'text-slate-900 placeholder:text-slate-400',
+              'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+              'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+            )}
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Patient Detail Panel
 // ---------------------------------------------------------------------------
 
-function PatientDetail({ patient, onClose }: { patient: PatientRow; onClose: () => void }) {
+function PatientDetail({
+  patient,
+  onClose,
+  onSchedule,
+}: {
+  patient: PatientRow;
+  onClose: () => void;
+  onSchedule: (patient: PatientRow) => void;
+}) {
   const navigate = useNavigate();
   const age = calcAge(patient.dateOfBirth);
   const urgency = latestUrgency(patient);
@@ -149,7 +324,8 @@ function PatientDetail({ patient, onClose }: { patient: PatientRow; onClose: () 
           <Button variant="primary" size="sm" onClick={() => navigate(`/doctor/telemetry?patientId=${patient.id}`)}>
             View Telemetry
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/doctor/schedule')}>
+          <Button variant="outline" size="sm" onClick={() => onSchedule(patient)}>
+            <Plus className="h-4 w-4" />
             Schedule Appointment
           </Button>
         </div>
@@ -170,6 +346,7 @@ export function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
+  const [appointmentPatient, setAppointmentPatient] = useState<PatientRow | null>(null);
 
   const filteredPatients = useMemo(() => {
     let result = patients;
@@ -264,7 +441,11 @@ export function PatientsPage() {
                   <tr key={patient.id}>
                     <td colSpan={expandedPatient === patient.id ? 5 : undefined} className={expandedPatient === patient.id ? 'px-5 py-3' : undefined}>
                       {expandedPatient === patient.id ? (
-                        <PatientDetail patient={patient} onClose={() => setExpandedPatient(null)} />
+                        <PatientDetail
+                          patient={patient}
+                          onClose={() => setExpandedPatient(null)}
+                          onSchedule={setAppointmentPatient}
+                        />
                       ) : null}
                     </td>
                     {expandedPatient !== patient.id && (
@@ -293,10 +474,15 @@ export function PatientsPage() {
                           <UrgencyBadge level={urgency} />
                         </td>
                         <td className="px-5 py-3">
-                          <Button variant="ghost" size="sm" onClick={() => setExpandedPatient(patient.id)}>
-                            <ChevronDown className="h-4 w-4" />
-                            Details
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => setExpandedPatient(patient.id)}>
+                              <ChevronDown className="h-4 w-4" />
+                              Details
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setAppointmentPatient(patient)}>
+                              <Clock className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </>
                     )}
@@ -315,6 +501,14 @@ export function PatientsPage() {
           </div>
         )}
       </Card>
+
+      {/* Create Appointment Modal */}
+      <CreateAppointmentModal
+        open={appointmentPatient !== null}
+        onClose={() => setAppointmentPatient(null)}
+        patient={appointmentPatient}
+        doctorId={doctorId}
+      />
     </div>
   );
 }
