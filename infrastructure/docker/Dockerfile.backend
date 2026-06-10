@@ -59,8 +59,8 @@ COPY --from=builder --chown=uzavita:uzavita /app/packages/backend/package.json .
 COPY --from=builder --chown=uzavita:uzavita /app/packages/backend/node_modules ./packages/backend/node_modules
 COPY --from=builder --chown=uzavita:uzavita /app/package.json ./package.json
 
-# Copy migration files if they exist
-COPY --from=builder --chown=uzavita:uzavita /app/packages/backend/migrations ./packages/backend/migrations
+# Copy migration files
+COPY --from=builder --chown=uzavita:uzavita /app/packages/backend/src/database/migrations ./packages/backend/src/database/migrations
 
 # Switch to non-root user
 USER uzavita
