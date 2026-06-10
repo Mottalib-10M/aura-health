@@ -72,7 +72,7 @@ export const queryResolvers = {
         `SELECT * FROM patients WHERE id = $1`,
         [id],
       );
-      return result.rows[0] ?? null;
+      return result.rows[0] ? mapPatientRow(result.rows[0]) : null;
     },
 
     async patientByAuraId(_: unknown, { auraId }: { auraId: string }, ctx: GraphQLContext) {
@@ -81,7 +81,7 @@ export const queryResolvers = {
         `SELECT * FROM patients WHERE aura_id = $1`,
         [auraId],
       );
-      return result.rows[0] ?? null;
+      return result.rows[0] ? mapPatientRow(result.rows[0]) : null;
     },
 
     // ── Doctor ───────────────────────────────────────────────────────
@@ -457,7 +457,7 @@ export const queryResolvers = {
   Appointment: {
     async patient(parent: { patientId: string }) {
       const result = await query(`SELECT * FROM patients WHERE id = $1`, [parent.patientId]);
-      return result.rows[0] ?? null;
+      return result.rows[0] ? mapPatientRow(result.rows[0]) : null;
     },
     async doctor(parent: { doctorId: string }) {
       const result = await query(`SELECT * FROM doctors WHERE id = $1`, [parent.doctorId]);
@@ -468,7 +468,7 @@ export const queryResolvers = {
   Prescription: {
     async patient(parent: { patientId: string }) {
       const result = await query(`SELECT * FROM patients WHERE id = $1`, [parent.patientId]);
-      return result.rows[0] ?? null;
+      return result.rows[0] ? mapPatientRow(result.rows[0]) : null;
     },
     async doctor(parent: { doctorId: string }) {
       const result = await query(`SELECT * FROM doctors WHERE id = $1`, [parent.doctorId]);
@@ -479,7 +479,7 @@ export const queryResolvers = {
   TriageEvent: {
     async patient(parent: { patientId: string }) {
       const result = await query(`SELECT * FROM patients WHERE id = $1`, [parent.patientId]);
-      return result.rows[0] ?? null;
+      return result.rows[0] ? mapPatientRow(result.rows[0]) : null;
     },
   },
 };
@@ -487,6 +487,24 @@ export const queryResolvers = {
 // ---------------------------------------------------------------------------
 // Row mappers — DB snake_case → GraphQL camelCase
 // ---------------------------------------------------------------------------
+
+function mapPatientRow(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    auraId: row.aura_id,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    dateOfBirth: row.date_of_birth ? (row.date_of_birth as Date).toISOString?.() ?? row.date_of_birth : null,
+    gender: row.gender,
+    bloodType: row.blood_type,
+    region: row.region,
+    city: row.city,
+    language: row.language,
+    isActive: row.is_active,
+    createdAt: (row.created_at as Date)?.toISOString?.() ?? row.created_at,
+    updatedAt: (row.updated_at as Date)?.toISOString?.() ?? row.updated_at,
+  };
+}
 
 function mapDoctorRow(row: Record<string, unknown>) {
   return {
