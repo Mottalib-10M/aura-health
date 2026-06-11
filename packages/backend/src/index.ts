@@ -96,6 +96,7 @@ async function bootstrap(): Promise<void> {
             'https://admin.uzavita.com',
             /\.uzavita\.com$/,
             /\.vercel\.app$/,
+            /^http:\/\/localhost(:\d+)?$/,
           ],
       credentials: true,
       methods: ['GET', 'POST', 'OPTIONS'],
