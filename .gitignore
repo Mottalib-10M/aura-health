@@ -7,6 +7,8 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+vite.config.js
+vite.config.d.ts
 
 # Environment
 .env
@@ -64,3 +66,4 @@ docker-compose.override.yml
 credentials.json
 service-account.json
 .vercel
+.env.vercel-check

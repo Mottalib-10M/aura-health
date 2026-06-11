@@ -16,12 +16,12 @@ export default defineConfig({
       '/api': {
         target: 'https://uzavita-api-production.up.railway.app',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
       '/graphql': {
         target: 'https://uzavita-api-production.up.railway.app',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
       '/ws': {
         target: 'ws://localhost:4000',

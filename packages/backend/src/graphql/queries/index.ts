@@ -123,11 +123,11 @@ export const queryResolvers = {
       ctx: GraphQLContext,
     ) {
       requireAuth(ctx.user);
-      // Return patients who have appointments with this doctor
+      // Return patients who have appointments with this doctor OR were created by this doctor
       const result = await query(
         `SELECT DISTINCT p.* FROM patients p
-         INNER JOIN appointments a ON a.patient_id = p.id
-         WHERE a.doctor_id = $1
+         LEFT JOIN appointments a ON a.patient_id = p.id AND a.doctor_id = $1
+         WHERE a.doctor_id = $1 OR p.created_by = $1
          ORDER BY p.last_name, p.first_name
          LIMIT 100`,
         [doctorId],

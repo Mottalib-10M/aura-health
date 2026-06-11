@@ -126,34 +126,6 @@ export function useAuth() {
   // Login helper
   const login = useCallback(
     (email: string, password: string) => {
-      // Dev-mode test user bypass (no backend required)
-      if (import.meta.env.DEV && password === 'sherz') {
-        const devUsers: Record<string, typeof store.user & {}> = {
-          'sherz@uzavita.com': {
-            id: 'dev-sherz-001',
-            email: 'sherz@uzavita.com',
-            firstName: 'Sherz',
-            lastName: 'Uzavita',
-            role: 'doctor',
-            preferredLanguage: 'uz',
-          },
-          'sherz2@uzavita.com': {
-            id: 'dev-sherz-002',
-            email: 'sherz2@uzavita.com',
-            firstName: 'Sherz',
-            lastName: 'Patient',
-            role: 'patient',
-            preferredLanguage: 'uz',
-          },
-        };
-        const devUser = devUsers[email];
-        if (devUser) {
-          store.login(devUser, `dev-token-${devUser.id}`, `dev-refresh-${devUser.id}`);
-          navigate(ROLE_ROUTES[devUser.role]);
-          return;
-        }
-      }
-
       store.setLoading(true);
       store.setError(null);
       loginMutation.mutate({ email, password });

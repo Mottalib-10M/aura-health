@@ -520,9 +520,9 @@ export const mutationResolvers = {
           id, aura_id, first_name, last_name,
           date_of_birth, gender, blood_type,
           region, city, language,
-          password_hash, email,
+          password_hash, email, created_by,
           created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULL, $11, NOW(), NOW())`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULL, $11, $12, NOW(), NOW())`,
         [
           patientId,
           auraId,
@@ -535,6 +535,7 @@ export const mutationResolvers = {
           input.city,
           input.language ?? 'uz',
           input.email ?? null,
+          ctx.user!.id,
         ],
       );
 
