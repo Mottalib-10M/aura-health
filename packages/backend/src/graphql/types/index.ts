@@ -354,6 +354,18 @@ export const typeDefs = /* GraphQL */ `
     email: String
   }
 
+  input CreatePatientInput {
+    firstName: String!
+    lastName: String!
+    dateOfBirth: String!
+    gender: String!
+    region: String!
+    city: String!
+    bloodType: String
+    language: String
+    email: String
+  }
+
   input RegisterDoctorInput {
     firstName: String!
     lastName: String!
@@ -560,6 +572,9 @@ export const typeDefs = /* GraphQL */ `
     # Registration
     registerPatient(input: RegisterPatientInput!): AuthPayload!
     registerDoctor(input: RegisterDoctorInput!): AuthPayload!
+
+    # Doctor-initiated patient creation
+    createPatient(input: CreatePatientInput!): Patient!
 
     # Admin
     updateVerificationStatus(input: UpdateVerificationStatusInput!): Doctor!

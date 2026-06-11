@@ -12,7 +12,7 @@ import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { usePatients, type PatientRow } from '@/hooks/usePatients';
 import { gqlRequest } from '@/services/api';
-import { CREATE_APPOINTMENT } from '@/services/graphql/mutations';
+import { CREATE_APPOINTMENT, CREATE_PATIENT } from '@/services/graphql/mutations';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -219,6 +219,213 @@ function CreateAppointmentModal({
 }
 
 // ---------------------------------------------------------------------------
+// Create Patient Modal
+// ---------------------------------------------------------------------------
+
+function CreatePatientModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState('');
+  const [region, setRegion] = useState('');
+  const [city, setCity] = useState('');
+  const [email, setEmail] = useState('');
+
+  const createMutation = useMutation({
+    mutationFn: (input: Record<string, unknown>) =>
+      gqlRequest<{ createPatient: unknown }>(CREATE_PATIENT, { input }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      onClose();
+      resetForm();
+    },
+  });
+
+  const resetForm = () => {
+    setFirstName('');
+    setLastName('');
+    setDateOfBirth('');
+    setGender('');
+    setRegion('');
+    setCity('');
+    setEmail('');
+  };
+
+  const handleSubmit = () => {
+    createMutation.mutate({
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      region,
+      city,
+      ...(email ? { email } : {}),
+    });
+  };
+
+  const isValid = firstName && lastName && dateOfBirth && gender && region && city;
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Add New Patient"
+      description="Create a patient record. The patient can set their password later."
+      size="lg"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={createMutation.isPending}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSubmit} disabled={createMutation.isPending || !isValid}>
+            {createMutation.isPending ? 'Creating...' : 'Create Patient'}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        {createMutation.isError && (
+          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+            Failed to create patient. Please try again.
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              First Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="First name"
+              className={cn(
+                'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+                'text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+              )}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Last Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Last name"
+              className={cn(
+                'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+                'text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+              )}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Date of Birth <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              className={cn(
+                'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+                'text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+              )}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Gender <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className={cn(
+                'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+                'text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+              )}
+            >
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Region <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              placeholder="e.g. Tashkent"
+              className={cn(
+                'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+                'text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+              )}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              City <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g. Tashkent"
+              className={cn(
+                'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+                'text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+                'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+              )}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Email <span className="text-xs text-slate-400">(optional)</span>
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="patient@example.com"
+            className={cn(
+              'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm',
+              'text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500',
+              'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+            )}
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Patient Detail Panel
 // ---------------------------------------------------------------------------
 
@@ -347,6 +554,7 @@ export function PatientsPage() {
   const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
   const [appointmentPatient, setAppointmentPatient] = useState<PatientRow | null>(null);
+  const [showCreatePatient, setShowCreatePatient] = useState(false);
 
   const filteredPatients = useMemo(() => {
     let result = patients;
@@ -377,11 +585,17 @@ export function PatientsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Patient List</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Manage and review your patients
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Patient List</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Manage and review your patients
+          </p>
+        </div>
+        <Button variant="primary" onClick={() => setShowCreatePatient(true)}>
+          <Plus className="h-4 w-4" />
+          Add Patient
+        </Button>
       </div>
 
       {/* Search & Filters */}
@@ -508,6 +722,12 @@ export function PatientsPage() {
         onClose={() => setAppointmentPatient(null)}
         patient={appointmentPatient}
         doctorId={doctorId}
+      />
+
+      {/* Create Patient Modal */}
+      <CreatePatientModal
+        open={showCreatePatient}
+        onClose={() => setShowCreatePatient(false)}
       />
     </div>
   );

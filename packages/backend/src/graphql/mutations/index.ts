@@ -70,6 +70,18 @@ interface RegisterPatientInput {
   password?: string;
 }
 
+interface CreatePatientInput {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: string;
+  region: string;
+  city: string;
+  bloodType?: string;
+  language?: string;
+  email?: string;
+}
+
 interface RegisterDoctorInput {
   firstName: string;
   lastName: string;
@@ -487,6 +499,64 @@ export const mutationResolvers = {
           role: 'PATIENT',
           auraId,
         },
+      };
+    },
+
+    // ── Create Patient (Doctor-initiated) ─────────────────────────────
+    async createPatient(
+      _: unknown,
+      { input }: { input: CreatePatientInput },
+      ctx: GraphQLContext,
+    ) {
+      requireRole(ctx.user, UserRole.DOCTOR, UserRole.SYSTEM_ADMIN);
+
+      const patientId = uuidv4();
+      const regionCode = input.region.slice(0, 3).toUpperCase();
+      const randomSuffix = Math.random().toString(36).slice(2, 10).toUpperCase();
+      const auraId = `AH-${regionCode}-${randomSuffix}`;
+
+      await query(
+        `INSERT INTO patients (
+          id, aura_id, first_name, last_name,
+          date_of_birth, gender, blood_type,
+          region, city, language,
+          password_hash, email,
+          created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULL, $11, NOW(), NOW())`,
+        [
+          patientId,
+          auraId,
+          input.firstName,
+          input.lastName,
+          input.dateOfBirth,
+          input.gender,
+          input.bloodType ?? null,
+          input.region,
+          input.city,
+          input.language ?? 'uz',
+          input.email ?? null,
+        ],
+      );
+
+      logger.info({ patientId, auraId, createdBy: ctx.user!.id }, 'Patient created by doctor');
+
+      return {
+        id: patientId,
+        auraId,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        dateOfBirth: input.dateOfBirth,
+        gender: input.gender,
+        bloodType: input.bloodType ?? null,
+        region: input.region,
+        city: input.city,
+        language: input.language ?? 'uz',
+        publicKey: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        appointments: [],
+        prescriptions: [],
+        triageHistory: [],
       };
     },
 

@@ -71,6 +71,27 @@ export const REFRESH_TOKEN = /* GraphQL */ `
   }
 `;
 
+// ---- Doctor-initiated Patient Creation ------------------------------------
+
+export const CREATE_PATIENT = /* GraphQL */ `
+  mutation CreatePatient($input: CreatePatientInput!) {
+    createPatient(input: $input) {
+      id
+      auraId
+      firstName
+      lastName
+      dateOfBirth
+      gender
+      bloodType
+      region
+      city
+      language
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 // ---- Triage ---------------------------------------------------------------
 
 export const SUBMIT_SYMPTOM_TRIAGE = /* GraphQL */ `
