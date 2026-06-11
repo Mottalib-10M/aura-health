@@ -352,6 +352,7 @@ export const typeDefs = /* GraphQL */ `
     language: String
     phone: String
     email: String
+    password: String
   }
 
   input CreatePatientInput {
@@ -376,6 +377,8 @@ export const typeDefs = /* GraphQL */ `
     region: String!
     languages: [String!]!
     credentialDocumentUrl: String
+    email: String
+    password: String
   }
 
   input DateRangeInput {

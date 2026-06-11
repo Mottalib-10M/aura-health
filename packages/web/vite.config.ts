@@ -14,12 +14,14 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'https://uzavita-api-production.up.railway.app',
         changeOrigin: true,
+        secure: true,
       },
       '/graphql': {
-        target: 'http://localhost:4000',
+        target: 'https://uzavita-api-production.up.railway.app',
         changeOrigin: true,
+        secure: true,
       },
       '/ws': {
         target: 'ws://localhost:4000',
