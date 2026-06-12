@@ -33,6 +33,7 @@ export async function gqlRequest<TData, TVariables extends Record<string, unknow
   let response: Response;
 
   try {
+    console.log('[gql]', GRAPHQL_ENDPOINT, document.slice(0, 80));
     response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers,
@@ -41,7 +42,9 @@ export async function gqlRequest<TData, TVariables extends Record<string, unknow
         variables: variables ?? undefined,
       }),
     });
+    console.log('[gql] response status:', response.status);
   } catch (networkError) {
+    console.error('[gql] network error:', networkError);
     throw new Error('Network error — unable to reach the server');
   }
 

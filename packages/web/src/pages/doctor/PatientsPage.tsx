@@ -293,7 +293,9 @@ function CreatePatientModal({
       <div className="space-y-4">
         {createMutation.isError && (
           <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-            Failed to create patient. Please try again.
+            {createMutation.error?.message?.includes('duplicate')
+              ? 'A patient with this email already exists.'
+              : createMutation.error?.message || 'Failed to create patient. Please try again.'}
           </div>
         )}
 
@@ -548,7 +550,9 @@ function PatientDetail({
 export function PatientsPage() {
   const user = useAuthStore((s) => s.user);
   const doctorId = user?.id ?? '';
-  const { patients, isLoading } = usePatients(doctorId);
+  const { patients, isLoading, isError, error } = usePatients(doctorId);
+
+  console.log('[PatientsPage] doctorId:', doctorId, 'patients:', patients.length, 'isError:', isError, 'error:', error?.message);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
@@ -573,6 +577,18 @@ export function PatientsPage() {
     }
     return result;
   }, [patients, searchQuery, urgencyFilter]);
+
+  if (isError) {
+    return (
+      <div className="p-8">
+        <div className="rounded-lg bg-red-50 p-4 text-red-800 dark:bg-red-950 dark:text-red-200">
+          <p className="font-semibold">Error loading patients</p>
+          <p className="text-sm mt-1">{error?.message || 'Unknown error'}</p>
+          <p className="text-xs mt-2 text-red-600">Doctor ID: {doctorId || 'empty'}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

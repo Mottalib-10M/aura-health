@@ -192,11 +192,11 @@ export const typeDefs = /* GraphQL */ `
   }
 
   type Medication {
-    drugName: String!
-    dosage: String!
-    frequency: String!
-    durationDays: Int!
-    route: String!
+    drugName: String
+    dosage: String
+    frequency: String
+    durationDays: Int
+    route: String
     instructions: String
   }
 

@@ -5,7 +5,7 @@ import { requireAuth, requireRole, requireOwnership, signToken, signRefreshToken
 import { executeTriage } from '../../services/ai/triage-engine.js';
 import { scheduleAppointment } from '../../modules/appointment/index.js';
 import { logger } from '../../utils/logger.js';
-import { generateCheckInCode } from '../../utils/crypto.js';
+import { generateCheckInCode, generateRsaKeyPair, sha256 } from '../../utils/crypto.js';
 import { auditPrescriptionOutcome } from '../../services/blockchain/index.js';
 import { ingestSurveillanceData as ingestSurveillanceDataModule } from '../../modules/analyst/index.js';
 
@@ -515,14 +515,18 @@ export const mutationResolvers = {
       const randomSuffix = Math.random().toString(36).slice(2, 10).toUpperCase();
       const auraId = `AH-${regionCode}-${randomSuffix}`;
 
+      const keyPair = generateRsaKeyPair();
+      const biometricHash = sha256(`${input.firstName}:${input.lastName}:${input.dateOfBirth}`);
+
       await query(
         `INSERT INTO patients (
           id, aura_id, first_name, last_name,
           date_of_birth, gender, blood_type,
           region, city, language,
+          biometric_hash, public_key,
           password_hash, email, created_by,
           created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULL, $11, $12, NOW(), NOW())`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NULL, $13, $14, NOW(), NOW())`,
         [
           patientId,
           auraId,
@@ -534,6 +538,8 @@ export const mutationResolvers = {
           input.region,
           input.city,
           input.language ?? 'uz',
+          biometricHash,
+          keyPair.publicKey,
           input.email ?? null,
           ctx.user!.id,
         ],
@@ -552,7 +558,7 @@ export const mutationResolvers = {
         region: input.region,
         city: input.city,
         language: input.language ?? 'uz',
-        publicKey: null,
+        publicKey: keyPair.publicKey,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         appointments: [],
