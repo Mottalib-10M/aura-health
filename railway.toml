@@ -1,0 +1,5 @@
+[build]
+buildCommand = "npm install && npm run build:shared && npm run build:backend"
+
+[deploy]
+startCommand = "node packages/backend/dist/index.js"
