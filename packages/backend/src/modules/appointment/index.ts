@@ -227,36 +227,37 @@ export async function scheduleAppointment(input: ScheduleAppointmentInput): Prom
     throw new Error(`No verified ${input.specialty} doctors available`);
   }
 
-  // Step 2: Find available slot with best doctor
-  let selectedDoctor = rankedDoctors[0];
-  let slotResult: Awaited<ReturnType<typeof findBestSlot>> | null = null;
-  let lastError: Error | null = null;
-
-  for (const doctor of rankedDoctors) {
-    try {
-      slotResult = await findBestSlot(doctor.id, input);
-      selectedDoctor = doctor;
-      break;
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
-      continue;
-    }
-  }
-
   // Direct booking: when a doctor explicitly picks a date+time from the schedule,
   // bypass the slot availability system and book directly at the requested time.
-  if (!slotResult && input.doctorId && input.preferredDate && input.preferredTimeStart) {
-    logger.info('No slots from schedule — using direct booking for doctor-initiated request');
+  let selectedDoctor = rankedDoctors[0];
+  let slotResult: Awaited<ReturnType<typeof findBestSlot>> | null = null;
+
+  if (input.doctorId && input.preferredDate && input.preferredTimeStart) {
+    logger.info('Direct booking — doctor selected specific date/time');
     selectedDoctor = rankedDoctors.find(d => d.id === input.doctorId) ?? rankedDoctors[0];
     const scheduledAt = new Date(`${input.preferredDate}T${input.preferredTimeStart}:00`);
     slotResult = {
       scheduledAt: scheduledAt.toISOString(),
       alternativeSlots: [],
     };
-  }
+  } else {
+    // Step 2: Find available slot with best doctor via constraint solver
+    let lastError: Error | null = null;
 
-  if (!slotResult) {
-    throw lastError ?? new Error('No available slots found');
+    for (const doctor of rankedDoctors) {
+      try {
+        slotResult = await findBestSlot(doctor.id, input);
+        selectedDoctor = doctor;
+        break;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        continue;
+      }
+    }
+
+    if (!slotResult) {
+      throw lastError ?? new Error('No available slots found');
+    }
   }
 
   // Step 3: Create appointment
