@@ -262,11 +262,6 @@ export const GET_DOCTOR_PATIENTS = /* GraphQL */ `
       prescriptions {
         id
         diagnosisCodes
-        medications {
-          drugName
-          dosage
-          frequency
-        }
         createdAt
       }
       triageHistory {

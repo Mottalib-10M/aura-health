@@ -229,7 +229,7 @@ export async function scheduleAppointment(input: ScheduleAppointmentInput): Prom
 
   // Step 2: Find available slot with best doctor
   let selectedDoctor = rankedDoctors[0];
-  let slotResult: Awaited<ReturnType<typeof findBestSlot>>;
+  let slotResult: Awaited<ReturnType<typeof findBestSlot>> | null = null;
   let lastError: Error | null = null;
 
   for (const doctor of rankedDoctors) {
@@ -243,7 +243,19 @@ export async function scheduleAppointment(input: ScheduleAppointmentInput): Prom
     }
   }
 
-  if (!slotResult!) {
+  // Direct booking: when a doctor explicitly picks a date+time from the schedule,
+  // bypass the slot availability system and book directly at the requested time.
+  if (!slotResult && input.doctorId && input.preferredDate && input.preferredTimeStart) {
+    logger.info('No slots from schedule — using direct booking for doctor-initiated request');
+    selectedDoctor = rankedDoctors.find(d => d.id === input.doctorId) ?? rankedDoctors[0];
+    const scheduledAt = new Date(`${input.preferredDate}T${input.preferredTimeStart}:00`);
+    slotResult = {
+      scheduledAt: scheduledAt.toISOString(),
+      alternativeSlots: [],
+    };
+  }
+
+  if (!slotResult) {
     throw lastError ?? new Error('No available slots found');
   }
 

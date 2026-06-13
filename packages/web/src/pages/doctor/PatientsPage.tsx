@@ -667,55 +667,52 @@ export function PatientsPage() {
                 const age = calcAge(patient.dateOfBirth);
                 const urgency = latestUrgency(patient);
                 const lastVisit = lastVisitDate(patient);
-                return (
+                return expandedPatient === patient.id ? (
                   <tr key={patient.id}>
-                    <td colSpan={expandedPatient === patient.id ? 5 : undefined} className={expandedPatient === patient.id ? 'px-5 py-3' : undefined}>
-                      {expandedPatient === patient.id ? (
-                        <PatientDetail
-                          patient={patient}
-                          onClose={() => setExpandedPatient(null)}
-                          onSchedule={setAppointmentPatient}
-                        />
-                      ) : null}
+                    <td colSpan={5} className="px-5 py-3">
+                      <PatientDetail
+                        patient={patient}
+                        onClose={() => setExpandedPatient(null)}
+                        onSchedule={setAppointmentPatient}
+                      />
                     </td>
-                    {expandedPatient !== patient.id && (
-                      <>
-                        <td className="px-5 py-3">
-                          <div
-                            className="flex items-center gap-3 cursor-pointer"
-                            onClick={() => setExpandedPatient(patient.id)}
-                          >
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                              {patient.firstName[0]}{patient.lastName[0]}
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-900 dark:text-slate-100">
-                                {patient.firstName} {patient.lastName}
-                              </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">{patient.gender}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3 text-slate-700 dark:text-slate-300">{age}</td>
-                        <td className="px-5 py-3 text-slate-500 dark:text-slate-400">
-                          {lastVisit ? new Date(lastVisit).toLocaleDateString() : 'No visits'}
-                        </td>
-                        <td className="px-5 py-3">
-                          <UrgencyBadge level={urgency} />
-                        </td>
-                        <td className="px-5 py-3">
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => setExpandedPatient(patient.id)}>
-                              <ChevronDown className="h-4 w-4" />
-                              Details
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setAppointmentPatient(patient)}>
-                              <Clock className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </>
-                    )}
+                  </tr>
+                ) : (
+                  <tr key={patient.id}>
+                    <td className="px-5 py-3">
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => setExpandedPatient(patient.id)}
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                          {patient.firstName[0]}{patient.lastName[0]}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900 dark:text-slate-100">
+                            {patient.firstName} {patient.lastName}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{patient.gender}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-slate-700 dark:text-slate-300">{age}</td>
+                    <td className="px-5 py-3 text-slate-500 dark:text-slate-400">
+                      {lastVisit ? new Date(lastVisit).toLocaleDateString() : 'No visits'}
+                    </td>
+                    <td className="px-5 py-3">
+                      <UrgencyBadge level={urgency} />
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => setExpandedPatient(patient.id)}>
+                          <ChevronDown className="h-4 w-4" />
+                          Details
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setAppointmentPatient(patient)}>
+                          <Clock className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}

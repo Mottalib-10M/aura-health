@@ -18,7 +18,7 @@ import type { AppointmentRow } from '@/hooks/useSchedule';
 // ---------------------------------------------------------------------------
 
 const hours = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-const weekDayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+const weekDayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function getWeekDates(offset: number): Date[] {
   const now = new Date();
@@ -176,7 +176,7 @@ function QuickBookModal({
       <div className="space-y-4">
         {createMutation.isError && (
           <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-            Failed to create appointment. Please try again.
+            {createMutation.error instanceof Error ? createMutation.error.message : 'Failed to create appointment. Please try again.'}
           </div>
         )}
 
@@ -328,7 +328,12 @@ export function SchedulePage() {
     return map;
   }, [appointments, weekDates]);
 
-  const weekLabel = `${weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekDates[4].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  const weekLabel = `${weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekDates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+  // Determine which column (if any) is today
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const todayIdx = weekDates.findIndex(d => d.toISOString().slice(0, 10) === todayStr);
 
   const handleAddAvailability = useCallback(() => {
     manageScheduleMutation.mutate({
@@ -400,20 +405,39 @@ export function SchedulePage() {
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
+            <table className="w-full min-w-[1000px] table-fixed">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-700">
                   <th className="w-20 px-3 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400">
                     <Clock className="h-4 w-4" />
                   </th>
-                  {weekDayNames.map((day, i) => (
-                    <th key={day} className="px-2 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      <span className="block">{day}</span>
-                      <span className="text-slate-400 dark:text-slate-500">
-                        {weekDates[i].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </th>
-                  ))}
+                  {weekDayNames.map((day, i) => {
+                    const isToday = i === todayIdx;
+                    return (
+                      <th
+                        key={day}
+                        className={cn(
+                          'px-2 py-3 text-center text-xs font-semibold',
+                          isToday
+                            ? 'bg-primary-50 dark:bg-primary-950/40'
+                            : '',
+                        )}
+                      >
+                        <span className={cn('block', isToday ? 'text-primary-700 dark:text-primary-300' : 'text-slate-500 dark:text-slate-400')}>
+                          {day}
+                        </span>
+                        <span className={cn(
+                          isToday
+                            ? 'inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white text-[11px] font-bold'
+                            : 'text-slate-400 dark:text-slate-500',
+                        )}>
+                          {isToday
+                            ? weekDates[i].getDate()
+                            : weekDates[i].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -424,8 +448,15 @@ export function SchedulePage() {
                       <td className="px-3 py-1 text-xs font-medium text-slate-500 dark:text-slate-400">{hour}</td>
                       {weekDayNames.map((_, dayIdx) => {
                         const apt = slotMap[`${dayIdx}-${hourNum}`];
+                        const isToday = dayIdx === todayIdx;
                         return (
-                          <td key={`${dayIdx}-${hour}`} className="px-1 py-1">
+                          <td
+                            key={`${dayIdx}-${hour}`}
+                            className={cn(
+                              'px-1 py-1',
+                              isToday ? 'bg-primary-50/50 dark:bg-primary-950/20' : '',
+                            )}
+                          >
                             <SlotCell
                               appointment={apt}
                               onClick={() => handleSlotClick(dayIdx, hour)}
