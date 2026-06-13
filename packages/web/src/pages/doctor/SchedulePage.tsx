@@ -22,11 +22,11 @@ const weekDayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'S
 
 function getWeekDates(offset: number): Date[] {
   const now = new Date();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - now.getDay() + 1 + offset * 7);
+  // Build dates at noon UTC to avoid date-boundary issues across timezones
+  const monday = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1 + offset * 7, 12));
   return weekDayNames.map((_, i) => {
     const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
+    d.setUTCDate(monday.getUTCDate() + i);
     return d;
   });
 }
@@ -322,7 +322,7 @@ export function SchedulePage() {
       if (dayIdx === -1) continue;
       // Skip cancelled
       if (apt.status === 'CANCELLED') continue;
-      const hour = aptDate.getHours();
+      const hour = aptDate.getUTCHours();
       map[`${dayIdx}-${hour}`] = apt;
     }
     return map;
@@ -332,7 +332,7 @@ export function SchedulePage() {
 
   // Determine which column (if any) is today
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const todayIdx = weekDates.findIndex(d => d.toISOString().slice(0, 10) === todayStr);
 
   const handleAddAvailability = useCallback(() => {

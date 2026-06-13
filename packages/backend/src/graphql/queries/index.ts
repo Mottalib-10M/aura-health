@@ -225,9 +225,13 @@ export const queryResolvers = {
       if (date) {
         sql += ` AND DATE(scheduled_at) = $2`;
         params.push(date);
+      } else {
+        // Without a date filter, only return appointments from the last 30 days
+        // and up to 30 days ahead to avoid hitting the limit with old data
+        sql += ` AND scheduled_at >= NOW() - INTERVAL '30 days' AND scheduled_at <= NOW() + INTERVAL '30 days'`;
       }
 
-      sql += ` ORDER BY scheduled_at ASC LIMIT 50`;
+      sql += ` ORDER BY scheduled_at ASC LIMIT 200`;
       const result = await query(sql, params);
       return result.rows.map(mapAppointmentRow);
     },
