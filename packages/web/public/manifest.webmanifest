@@ -1,0 +1,16 @@
+{
+  "name": "Uzavita",
+  "short_name": "Uzavita",
+  "description": "AI-powered healthcare platform for Central Asia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -7,13 +7,43 @@
     <meta name="theme-color" content="#059669" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <meta name="author" content="Mottalib Radif, MBA INSEAD" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>Uzavita</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "Uzavita",
+          "url": "https://uzavita.com",
+          "logo": "/favicon.svg",
+          "description": "AI-powered healthcare platform for Central Asia",
+          "founder": {
+            "@type": "Person",
+            "name": "Mottalib Radif",
+            "jobTitle": "Founder",
+            "description": "MBA INSEAD",
+            "image": "/team/mottalib-radif.jpg"
+          },
+          "sameAs": []
+        },
+        {
+          "@type": "Person",
+          "name": "Mottalib Radif",
+          "jobTitle": "Founder",
+          "description": "MBA INSEAD",
+          "image": "/team/mottalib-radif.jpg",
+          "affiliation": {
+            "@type": "Organization",
+            "name": "Uzavita"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body class="min-h-screen bg-surface text-slate-900 dark:bg-surface-dark dark:text-slate-100">
     <div id="root"></div>

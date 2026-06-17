@@ -42,6 +42,10 @@ import { SurveillancePage } from '@/pages/analyst/SurveillancePage';
 import { OutbreaksPage } from '@/pages/analyst/OutbreaksPage';
 import { AnalystReportsPage } from '@/pages/analyst/ReportsPage';
 
+// Public pages
+import { AboutPage } from '@/pages/AboutPage';
+import { LegalPage } from '@/pages/LegalPage';
+
 // Error pages
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
@@ -132,6 +136,8 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/legal" element={<LegalPage />} />
 
         {/* Root redirect */}
         <Route path="/" element={<RootRedirect />} />
