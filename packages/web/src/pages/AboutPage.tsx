@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Heart, Globe, Shield, Brain, Users, Stethoscope, Activity, Building2, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Heart, Globe, Shield, Brain, Users, Stethoscope, Activity, Building2, GraduationCap, Lock, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 // ---------------------------------------------------------------------------
@@ -66,6 +66,13 @@ export function AboutPage() {
               policy decisions. The platform is designed from the ground up to serve four distinct stakeholders: patients,
               doctors, hospital administrators and government health analysts.
             </p>
+            <p>
+              This mission is deeply personal. Central Asian communities have historically been underserved by
+              digital health innovation. Most global health technology platforms are designed for well-connected
+              urban populations with reliable broadband and modern devices. Uzavita takes the opposite approach:
+              we design for the constraints of rural clinics with intermittent connectivity, limited bandwidth,
+              and older hardware. If our platform works in a remote village clinic, it works everywhere.
+            </p>
           </div>
         </section>
 
@@ -131,6 +138,107 @@ export function AboutPage() {
           </div>
         </section>
 
+        {/* Health Data Approach */}
+        <section className="mb-20">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary-100 dark:bg-secondary-900/40">
+              <Activity className="h-5 w-5 text-secondary-600 dark:text-secondary-400" />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">Our Approach to Health Data</h2>
+          </div>
+          <div className="space-y-4 text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p>
+              Health data is the foundation of modern evidence-based medicine, yet in many regions of Central Asia,
+              clinical data remains trapped in paper records, siloed across disconnected facilities, and unavailable
+              for the population-level analysis that drives public health policy. Uzavita addresses this gap through
+              a structured, privacy-preserving approach to health data collection, storage, and analysis.
+            </p>
+            <p>
+              Every patient interaction on the platform generates structured clinical data points that feed into
+              both individual health records and anonymised aggregate datasets. Our data pipeline normalises inputs
+              from diverse sources — manual entries by physicians, automated readings from IoT devices, laboratory
+              results from connected LIMS systems — into a unified schema that supports longitudinal analysis.
+              This means that a patient's health trajectory can be tracked over months and years, revealing trends
+              that might be invisible in isolated consultations.
+            </p>
+            <p>
+              At the population level, our epidemiological engine processes de-identified data to surface actionable
+              insights. Health ministry analysts can visualise disease prevalence by district, track the effectiveness
+              of vaccination campaigns, model the spread of communicable diseases, and identify areas where healthcare
+              resources are most urgently needed. These insights are updated in near real-time, enabling rapid
+              response to emerging health threats rather than the weeks or months of delay typical of paper-based
+              reporting systems.
+            </p>
+          </div>
+        </section>
+
+        {/* Privacy Commitment */}
+        <section className="mb-20">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-100 dark:bg-accent-900/40">
+              <Lock className="h-5 w-5 text-accent-600 dark:text-accent-400" />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">Privacy and Data Protection</h2>
+          </div>
+          <div className="space-y-4 text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p>
+              Handling patient health data carries an extraordinary level of responsibility. Uzavita has been
+              designed with privacy as a foundational principle, not an afterthought. Every architectural decision
+              — from database design to API access patterns to front-end data handling — has been evaluated through
+              the lens of patient data protection.
+            </p>
+            <p>
+              All patient data in transit is encrypted using TLS 1.3, and all data at rest is encrypted using
+              AES-256 encryption. Role-based access control (RBAC) ensures that each user — whether a nurse,
+              physician, hospital administrator, or government analyst — sees only the data they are authorised
+              to access. Every access event is logged in an immutable audit trail, providing full accountability
+              and compliance transparency. Patient records are never shared with third parties without explicit
+              consent, and de-identification protocols are applied before any data enters aggregate analytics
+              pipelines.
+            </p>
+            <p>
+              The platform is designed to align with emerging healthcare data protection regulations across
+              Central Asia, as well as international standards including the principles of the European General
+              Data Protection Regulation (GDPR). As regulatory frameworks evolve in the region, Uzavita is
+              positioned to meet and exceed compliance requirements, giving patients and healthcare providers
+              confidence that their data is handled with the highest standards of care.
+            </p>
+          </div>
+        </section>
+
+        {/* User-Centric Design */}
+        <section className="mb-20">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-900/40">
+              <Smartphone className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">User-Centric Design Philosophy</h2>
+          </div>
+          <div className="space-y-4 text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p>
+              A powerful platform is worthless if the people who need it cannot use it effectively. Uzavita's
+              design philosophy places the end user — whether a patient in a rural village, a busy physician
+              juggling dozens of cases, or a data analyst tracking regional health trends — at the center of
+              every interface decision.
+            </p>
+            <p>
+              For patients, the symptom assessment flow uses plain language, avoids medical jargon, and supports
+              multiple Central Asian languages. The interface is designed to work on low-end smartphones over
+              2G and 3G connections, with aggressive data compression and offline-capable progressive web app
+              (PWA) functionality. Accessibility standards (WCAG 2.1 AA) are followed throughout to ensure
+              that users with visual, motor, or cognitive impairments can interact with the platform without
+              barriers.
+            </p>
+            <p>
+              For clinicians, the dashboard prioritises information density without sacrificing clarity. Critical
+              patient vitals, triage recommendations, and recent medical history are surfaced immediately upon
+              case selection, reducing the cognitive load on physicians who may be managing dozens of patients
+              simultaneously. The interface adapts to different screen sizes and input methods, from desktop
+              workstations in modern hospitals to tablet devices used during ward rounds.
+            </p>
+          </div>
+        </section>
+
         {/* Technology */}
         <section className="mb-20">
           <div className="flex items-center gap-3 mb-6">
@@ -183,10 +291,14 @@ export function AboutPage() {
                 MBA, INSEAD
               </div>
               <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                Passionate about health technology and digital wellness solutions, MBA INSEAD graduate. Specialized in
-                building innovative health platforms that leverage data science for personalized wellness insights. His
-                vision for Uzavita is to create a scalable healthcare platform that grows alongside the economies and
-                populations of Central Asia, turning data into better health outcomes for millions of people.
+                Mottalib Radif, MBA INSEAD, is passionate about health technology and digital wellness solutions.
+                Specialized in building innovative health platforms that leverage data science for personalized
+                wellness insights, he brings a unique combination of business acumen and technical expertise to
+                the healthcare technology space. His vision for Uzavita is to create a scalable healthcare
+                platform that grows alongside the economies and populations of Central Asia, turning data into
+                better health outcomes for millions of people. His experience spans health data analytics,
+                platform architecture, and the design of user experiences that serve diverse populations with
+                varying levels of digital literacy.
               </p>
             </div>
           </div>
