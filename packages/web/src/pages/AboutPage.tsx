@@ -177,17 +177,16 @@ export function AboutPage() {
             />
             <div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Mottalib Radif</h3>
-              <p className="mt-1 text-sm font-medium text-primary-600 dark:text-primary-400">Founder</p>
+              <p className="mt-1 text-sm font-medium text-primary-600 dark:text-primary-400">Health Technology and Digital Wellness Specialist</p>
               <div className="mt-1 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <GraduationCap className="h-4 w-4" />
                 MBA, INSEAD
               </div>
               <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                Mottalib brings deep expertise at the intersection of technology and business strategy. With an MBA from
-                INSEAD, one of the world's leading business schools, he combines rigorous analytical thinking with
-                first-hand understanding of emerging-market challenges. His vision for Uzavita is to create a scalable
-                healthcare platform that grows alongside the economies and populations of Central Asia, turning data into
-                better health outcomes for millions of people.
+                Passionate about health technology and digital wellness solutions, MBA INSEAD graduate. Specialized in
+                building innovative health platforms that leverage data science for personalized wellness insights. His
+                vision for Uzavita is to create a scalable healthcare platform that grows alongside the economies and
+                populations of Central Asia, turning data into better health outcomes for millions of people.
               </p>
             </div>
           </div>
